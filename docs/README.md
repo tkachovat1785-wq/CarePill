@@ -1,6 +1,6 @@
 # CarePill documentation
 
-Version 2026-11-18. These documents were rebuilt from the app in this repository (`index.html`, commit `55aede1`). They replace the earlier design-handoff versions, whose differences from the app are listed in `DESIGN_SYSTEM.md` §11.
+Version 2026-11-18, rev. 2. These documents were rebuilt from the app in this repository (`index.html`, commit `55aede1`) and updated for the UI fixes listed in `DESIGN_SYSTEM.md` §10a. They replace the earlier design-handoff versions, whose differences from the app are listed in `DESIGN_SYSTEM.md` §11.
 
 | File | Content |
 |---|---|
@@ -16,12 +16,11 @@ Version 2026-11-18. These documents were rebuilt from the app in this repository
 
 ## Open issues in the app
 
-`DESIGN_SYSTEM.md` §10 lists issues found in the app. They are documented, not fixed, and wait for a decision:
+Fixed (see `DESIGN_SYSTEM.md` §10a): buttons rendering in Arial, compressed buttons on Medication Details, missing focus and pressed states.
 
-- buttons rendering in Arial instead of Inter
-- compressed buttons on Medication Details
+Still open (`DESIGN_SYSTEM.md` §10), waiting for a decision:
+
 - text below 14px
-- no focus, hover or pressed states
 - partial reduced-motion support
 - no responsive layout below 442px
 

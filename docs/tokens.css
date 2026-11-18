@@ -112,6 +112,15 @@
 /* App today: reduced motion only stops .cp-ride and .cp-wheel (Welcome illustration). */
 @media (prefers-reduced-motion: reduce) { .cp-ride, .cp-wheel { animation: none !important; } }
 
+/* ===== Interaction states (R/S, same rules as the app) ===== */
+:root { --cp-focus-ring: #04277D; --cp-focus-ring-on-navy: #FFFFFF; --cp-focus-width: 3px; --cp-focus-offset: 3px; --cp-pressed-filter: brightness(.85); --cp-label-line-height: 1.15; }
+button:not([style*="font-family"]) { font-family: inherit; line-height: var(--cp-label-line-height); }
+select, textarea, input { font-family: inherit; }
+button:focus-visible, [role="button"]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: var(--cp-focus-width) solid var(--cp-focus-ring) !important; outline-offset: var(--cp-focus-offset) !important; }
+.cp-on-navy :focus-visible { outline-color: var(--cp-focus-ring-on-navy) !important; }
+button:not(:disabled):active, [role="button"]:active { filter: var(--cp-pressed-filter); }
+
 /* ===== Component recipes (match the app's measured values) =====
    The app sets these styles inline per state. The [aria-pressed] / [aria-current] selectors below are
    a recipe for reuse, not attributes the app itself always sets. */

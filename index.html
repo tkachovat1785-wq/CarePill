@@ -38,11 +38,19 @@
   @keyframes cpDrift{0%{opacity:0;transform:translateX(10px)}35%{opacity:.5}100%{opacity:0;transform:translateX(-32px)}}
   @media (prefers-reduced-motion: reduce){.cp-ride,.cp-wheel{animation:none !important}}
   .cp-wave>span{display:block;width:6px;border-radius:3px;background:#A3BBFF;transform-origin:center;animation:cpWave 1s ease-in-out infinite}
+  /* Typography: form controls do not inherit the font by default; without this, 42 buttons rendered in the browser's fallback font (Arial). */
+  button:not([style*="font-family"]){font-family:inherit;line-height:1.15}
+  select,textarea,input{font-family:inherit}
+  /* Keyboard focus: navy ring outside the control, white ring on navy surfaces. Shown for keyboard focus only (:focus-visible). */
+  button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #04277D !important;outline-offset:3px !important}
+  .cp-on-navy :focus-visible{outline-color:#FFFFFF !important}
+  /* Pressed feedback: instant darkening, no animation. */
+  button:not(:disabled):active,[role="button"]:active{filter:brightness(.85)}
 </style>
 </helmet>
 <div style="min-height:100vh;width:100%;background:#e7e5df;display:flex;align-items:center;justify-content:center;padding:40px 20px;box-sizing:border-box;font-family:Inter,-apple-system,sans-serif">
   <div style="position:relative;width:456px;height:954px;border-radius:60px;background:linear-gradient(145deg,#23211f,#0b0a0a);padding:14px;box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.04) inset">
-    <div style="position:relative;width:428px;height:926px;border-radius:46px;overflow:hidden;background:#FAF9F7">
+    <div data-cp-frame="" style="position:relative;width:428px;height:926px;border-radius:46px;overflow:hidden;background:#FAF9F7">
 
       <!-- STATUS BAR -->
       <div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:60;display:flex;align-items:flex-end;justify-content:space-between;padding:0 32px 13px;pointer-events:none">
@@ -56,7 +64,7 @@
       <div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);width:122px;height:32px;background:#000;border-radius:18px;z-index:61"></div>
 
       <!-- ONBOARDING TRACK -->
-      <div style="position:absolute;top:0;left:0;height:926px;display:flex;flex-direction:row;width:6420px;transition:transform .42s cubic-bezier(.4,.0,.2,1);transform:translateX({{ trackX }})">
+      <div data-cp-track="" style="position:absolute;top:0;left:0;height:926px;display:flex;flex-direction:row;width:6420px;transition:transform .42s cubic-bezier(.4,.0,.2,1);transform:translateX({{ trackX }})">
 
         <!-- 0 SPLASH -->
         <section data-screen-label="Splash" onClick="{{ nav.splashGo }}" style="flex:none;width:428px;height:926px;background:#E3F2EE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;cursor:pointer">
@@ -304,7 +312,7 @@
           <div class="cp-scroll" style="flex:1;overflow-y:auto;padding:22px 28px 8px;display:flex;flex-direction:column;gap:14px">
             <sc-for list="{{ contacts }}" as="c" hint-placeholder-count="1">
               <div style="width:100%;background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 6px 18px rgba(13,92,77,.06)">
-                <div onClick="{{ c.onOpen }}" style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;cursor:pointer">
+                <div onClick="{{ c.onOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;cursor:pointer">
                   <div style="width:56px;height:56px;border-radius:50%;background:#E0E8FF;display:flex;align-items:center;justify-content:center;flex:none;font-size:21px;font-weight:700;color:#04277D">{{ c.initials }}</div>
                   <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
                     <span style="font-size:13px;font-weight:600;color:{{ secColor }};text-transform:uppercase;letter-spacing:.4px">{{ c.rel }}</span>
@@ -445,7 +453,7 @@
           </div>
           <div class="cp-scroll" style="flex:1;overflow-y:auto;padding:20px 28px 8px;display:flex;flex-direction:column;gap:20px">
             <sc-for list="{{ medCards }}" as="m" hint-placeholder-count="1">
-              <div onClick="{{ m.onOpen }}" style="width:100%;background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px 20px;box-shadow:0 6px 18px rgba(13,92,77,.06);display:flex;align-items:center;gap:16px;cursor:pointer">
+              <div onClick="{{ m.onOpen }}" role="button" tabindex="0" style="width:100%;background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px 20px;box-shadow:0 6px 18px rgba(13,92,77,.06);display:flex;align-items:center;gap:16px;cursor:pointer">
                 <div style="width:52px;height:52px;border-radius:14px;background:#E6F0EC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="#04277D"/></svg></div>
                 <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0"><span style="font-size:21px;font-weight:700;color:#1E2E29">{{ m.name }}</span><span style="font-size:16px;font-weight:500;color:{{ secColor }}">{{ m.detail }}</span></div>
                 <svg width="11" height="18" viewBox="0 0 11 18" fill="none" style="flex:none"><path d="M2 2l7 7-7 7" stroke="#9AA8A3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -494,9 +502,9 @@
                 </sc-if>
 
                 <sc-if value="{{ hasHero }}" hint-placeholder-val="{{ true }}">
-                  <div style="border-radius:26px;background:#04277D;padding:26px;color:#fff;box-shadow:0 18px 38px rgba(4,39,125,.26);position:relative;overflow:hidden">
+                  <div class="cp-on-navy" style="border-radius:26px;background:#04277D;padding:26px;color:#fff;box-shadow:0 18px 38px rgba(4,39,125,.26);position:relative;overflow:hidden">
                     <div style="position:absolute;right:-26px;top:-26px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
-                    <div onClick="{{ heroOpen }}" style="display:flex;align-items:center;gap:16px;position:relative;cursor:pointer">
+                    <div onClick="{{ heroOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;position:relative;cursor:pointer">
                       <div style="width:66px;height:66px;border-radius:20px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="#fff"/></svg></div>
                       <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
                         <span style="font-size:26px;font-weight:700;letter-spacing:-.3px">{{ hero.name }}</span>
@@ -519,7 +527,7 @@
                 <div style="display:flex;flex-direction:column;gap:14px">
                   <sc-for list="{{ timeline }}" as="d" hint-placeholder-count="2">
                     <div style="background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px 20px;box-shadow:0 4px 14px rgba(13,92,77,.05);display:flex;flex-direction:column;gap:14px">
-                      <div onClick="{{ d.onOpen }}" style="display:flex;align-items:center;gap:16px;cursor:pointer">
+                      <div onClick="{{ d.onOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;cursor:pointer">
                         <div style="width:54px;height:54px;border-radius:15px;background:#F1F5F3;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none"><span style="font-size:18px;font-weight:800;color:#04277D;line-height:1">{{ d.time }}</span><span style="font-size:12px;font-weight:700;color:{{ secColor }}">{{ d.period }}</span></div>
                         <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="font-size:20px;font-weight:700;color:#1E2E29">{{ d.name }}</span><span style="font-size:16px;font-weight:500;color:{{ secColor }}">{{ d.dose }}</span></div>
                         <span style="padding:8px 14px;border-radius:999px;background:{{ d.chipBg }};color:{{ d.chipFg }};font-size:14px;font-weight:700;flex:none">{{ d.chipLabel }}</span>
@@ -951,8 +959,8 @@
                 </div>
               </sc-for>
             </div>
-            <button onClick="{{ openMedEdit }}" style="width:100%;height:80px;border-radius:18px;border:2px solid #04277D;background:#fff;color:#04277D;font-family:Inter,sans-serif;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10-10-4-4L4 16v4z" stroke="#04277D" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="#04277D" stroke-width="2" stroke-linecap="round"/></svg>{{ t.editMedication }}</button>
-            <button onClick="{{ askDeleteMed }}" aria-label="Delete medication" style="width:100%;height:66px;border-radius:16px;border:none;background:transparent;color:#BA1A1A;font-family:Inter,sans-serif;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M10 7V5h4v2M8 7l1 13h6l1-13" stroke="#BA1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ t.deleteMedication }}</button>
+            <button onClick="{{ openMedEdit }}" style="flex:none;width:100%;height:80px;border-radius:18px;border:2px solid #04277D;background:#fff;color:#04277D;font-family:Inter,sans-serif;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10-10-4-4L4 16v4z" stroke="#04277D" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="#04277D" stroke-width="2" stroke-linecap="round"/></svg>{{ t.editMedication }}</button>
+            <button onClick="{{ askDeleteMed }}" aria-label="Delete medication" style="flex:none;width:100%;height:66px;border-radius:16px;border:none;background:transparent;color:#BA1A1A;font-family:Inter,sans-serif;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 7h14M10 7V5h4v2M8 7l1 13h6l1-13" stroke="#BA1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ t.deleteMedication }}</button>
           </div>
         </div>
       </sc-if>
@@ -1090,7 +1098,7 @@
               <div style="display:flex;flex-direction:column;gap:14px">
                 <sc-for list="{{ emgContacts }}" as="c" hint-placeholder-count="1">
                   <div style="width:100%;background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 6px 18px rgba(13,92,77,.06)">
-                    <div onClick="{{ c.onOpen }}" style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;cursor:pointer">
+                    <div onClick="{{ c.onOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;cursor:pointer">
                       <div style="width:56px;height:56px;border-radius:50%;background:#E0E8FF;display:flex;align-items:center;justify-content:center;flex:none;font-size:21px;font-weight:700;color:#04277D">{{ c.initials }}</div>
                       <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:0">
                         <span style="font-size:21px;font-weight:700;color:#1E2E29;text-wrap:pretty">{{ c.name }}</span>
@@ -1367,9 +1375,20 @@ class Component extends DCLogic {
     const d=this.nextReminderDose(); if(!d) return; const NOW=9+41/60; this.setState({overlay:d.h<NOW?'missed':'reminder', reminderMed:d}); }
   componentDidMount(){ try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} this._ovSeen=this.state.overlay; clearInterval(this._remPoll); this._remPoll=setInterval(()=>this.reminderTick(),250); this._lastLoc={phase:this.state.phase, obStep:this.state.obStep, tab:this.state.tab}; this._introTok=0;
     try{ localStorage.removeItem('carepill_lang'); }catch(e){}
-    try{ const sy=window.speechSynthesis; if(sy){ sy.getVoices(); sy.onvoiceschanged=()=>{ sy.getVoices(); }; } }catch(e){} }
-  componentWillUnmount(){ clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
+    try{ const sy=window.speechSynthesis; if(sy){ sy.getVoices(); sy.onvoiceschanged=()=>{ sy.getVoices(); }; } }catch(e){}
+    this._cpKey=(e)=>this.onCpKey(e); document.addEventListener('keydown', this._cpKey); this.syncInert(); }
+  syncInert(){ try{
+    const f=document.querySelector('[data-cp-frame]'); if(!f) return; const s=this.state;
+    const tr=f.querySelector('[data-cp-track]');
+    if(tr){ tr.querySelectorAll('section[data-screen-label]').forEach((el,i)=>{ el.inert=!(s.phase==='onboarding' && i===s.obStep); }); }
+    const kids=[...f.children]; const fr=f.getBoundingClientRect(); let top=-1;
+    kids.forEach(el=>{ const r=el.getBoundingClientRect(); const z=parseInt(getComputedStyle(el).zIndex)||0; if(Math.abs(r.left-fr.left)<1 && Math.abs(r.top-fr.top)<1 && Math.abs(r.width-fr.width)<1 && Math.abs(r.height-fr.height)<1 && z>top) top=z; });
+    kids.forEach(el=>{ const z=parseInt(getComputedStyle(el).zIndex)||0; el.inert = top>=0 && z<top && el!==f.firstElementChild; });
+  }catch(e){} }
+  onCpKey(e){ if(e.key!=='Enter' && e.key!==' ') return; const t=e.target; if(t && t.getAttribute && t.getAttribute('role')==='button' && t.tagName!=='BUTTON'){ e.preventDefault(); t.click(); } }
+  componentWillUnmount(){ try{ document.removeEventListener('keydown', this._cpKey); }catch(e){} clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
   componentDidUpdate(prevProps, prevState){
+    this.syncInert();
     if(prevState && prevState.overlay==='anna' && this.state.overlay!=='anna'){ this.abortListen(); if(this.state.srHeard||this.state.srResult||this.state.srErr) this.setState({srHeard:'', srResult:'', srErr:''}); }
     const cur={phase:this.state.phase, obStep:this.state.obStep, tab:this.state.tab};
     const last=this._lastLoc;

@@ -1,6 +1,6 @@
 # CarePill — Design System Specification
 
-**Version:** 2026-11-18. Rebuilt from the app in this repository (`index.html` at commit `55aede1`). This replaces the earlier handoff spec.
+**Version:** 2026-11-18, rev. 2. Rebuilt from the app in this repository (`index.html` at commit `55aede1`), then updated for the UI fixes in §10a (typography, Medication Details buttons, interaction states). This replaces the earlier handoff spec.
 
 **Single source of truth:** where this document and `index.html` disagree, `index.html` wins.
 
@@ -123,7 +123,7 @@ Known inconsistencies in the app itself are listed in [§10](#10-known-inconsist
 
 **Family:** `Inter, sans-serif`, loaded from Google Fonts at weights 400/500/600/700/800. **R**
 
-There are 42 buttons whose styles set no `font-family`. Their labels render in the browser's default button font (Arial in Chromium) instead of Inter. See [§10](#10-known-inconsistencies-in-the-app-not-fixed). **R/S**
+All text renders in Inter. 42 buttons set no `font-family` inline; they now inherit Inter through `button:not([style*="font-family"]){font-family:inherit;line-height:1.15}`. The line height 1.15 keeps the line boxes of the former Arial fallback, so no button or container changed size (verified: 0 container size changes across 39 states). **R/S**
 
 | Role | Size / weight | Letter-spacing | Line height | Colour | Example | Src |
 |---|---|---|---|---|---|---|
@@ -144,7 +144,7 @@ There are 42 buttons whose styles set no `font-family`. Their labels render in t
 | Primary button label | 22 / 700 | normal | normal | white | 90px CTAs | R |
 | Modal button label | 23 / 700 | normal | normal | white | "Take Med", "Snooze 15 minutes" | R |
 | Secondary button label | 18–21 / 700 | normal | normal | navy | Outline buttons | R |
-| Option label | 20 / 600 | normal | normal | `#1E2E29` | Frequency and language tiles (renders in Arial) | R |
+| Option label | 20 / 600 | normal | 1.15 | `#1E2E29` | Frequency and language tiles | R |
 | Body large | 20 / 400 | normal | 30px | `#2C3531` | Welcome / Taken paragraph | R |
 | Body | 19 / 400 | normal | 1.45 (27.55px) | `#2C3531` | Screen intros | R |
 | Body small | 18 / 400 | normal | 1.45–1.5 | `#2C3531` | Emergency intro, Meet Anna hint | R |
@@ -154,7 +154,7 @@ There are 42 buttons whose styles set no `font-family`. Their labels render in t
 | Overline | 15 / 600–700 | 0.4–0.6px | normal | `#2C3531` / navy, UPPERCASE | "STEP 1 OF 2 · SAFETY", "NEXT DOSE" | R |
 | Detail overline | 14 / 700 | 0.4–0.5px | normal | `#2C3531`, UPPERCASE | Detail rows, "HOUR" / "MIN" | R |
 | Status chip | 14 / 700 | normal | normal | `#AF5F3E` | "Missed" | R |
-| Nav label | 13 / 700 | normal | normal | navy active, `#9AA8A3` inactive | Bottom nav (renders in Arial) | R |
+| Nav label | 13 / 700 | normal | 1.15 | navy active, `#9AA8A3` inactive | Bottom nav | R |
 | Small caption | 13 / 600, 12 / 700 | 0.4px / normal | normal | `#2C3531` | Contact relationship (13), schedule "AM" (12) | R |
 
 **Minimum size.** The earlier spec said "nothing below 14px". The app has three text styles below that: 13px nav labels, 13px relationship overline, and the 12px AM/PM inside the schedule time tile. **R**
@@ -278,11 +278,16 @@ All sizes are at 428px, text scale 1×. "Seen on" names the screen where the com
 
 **States.** **S**
 
-- No `:hover`, `:active` or `:focus` styles exist.
-- No button has a disabled style.
-- 20 inputs set `outline: none` and have no replacement focus indicator.
+| State | Spec | Applies to | Src |
+|---|---|---|---|
+| Keyboard focus | `outline: 3px solid #04277D; outline-offset: 3px` on `:focus-visible`. On the navy hero card the ring is white (`.cp-on-navy`). Shown for keyboard focus only, not on tap. | `button`, `[role="button"]`, `input`, `select`, `textarea`, `a` | R/S |
+| Pressed | `filter: brightness(.85)` on `:active`, instant, no transition | `button`, `[role="button"]` | R/S |
+| Hover | None (touch-first app) | — | S |
+| Disabled | None. No button in the app is disabled. | — | S |
 
-The earlier spec's "buttons darken / settle on press" is not implemented.
+Keyboard support added with the focus states:
+- Tappable cards (medication cards, hero card, schedule items, contact cards) have `role="button"` and `tabindex="0"`, and Enter or Space activates them, like the existing tappable time cards.
+- Screens that are not visible (other onboarding steps, layers under an open overlay) are made `inert`, so Tab stays on what is on screen. Before this, Tab moved focus into hidden onboarding screens and scrolled the track.
 
 ### 8.2 Inputs
 
@@ -321,7 +326,7 @@ The earlier spec's "buttons darken / settle on press" is not implemented.
 | Detail row card | 372×86 | white, 1.5px `#E8ECEA`, r18, padding `18px 20px`. Overline 14/700; value 20/600. | R |
 | Contact card | 372×102 (saved) / 140 (manage) | white, 1.5px `#E8ECEA`, r20, padding 18, shadow `0 6px 18px rgba(13,92,77,.06)`. Avatar 56 `#E0E8FF`; name 20–21/700; call button 46. | R |
 | Medication-added card | 372×106 | as contact card, padding `18px 20px`; icon chip 52 `#E6F0EC` r14 | R |
-| Profile row | 372×74 | white, 1.5px `#E2E7E5`, r16, padding `0 18px`, 19/700 navy (renders in Arial) | R |
+| Profile row | 372×74 | white, 1.5px `#E2E7E5`, r16, padding `0 18px`, 19/700 navy | R |
 
 ### 8.5 Navigation
 
@@ -354,10 +359,10 @@ The earlier spec's "buttons darken / settle on press" is not implemented.
 
 | Item | Status | Src |
 |---|---|---|
-| Touch targets | Smallest interactive targets are 44×44 (modal close) and 46×46 (back, call). Medication Details' Edit and Delete buttons render at 46px and 37px tall (see §10). | R |
+| Touch targets | Smallest interactive targets are 44×44 (modal close) and 46×46 (back, call). Medication Details' Edit and Delete render at 80px and 66px and grow with the text size (up to 112px and 92px). | R |
 | Contrast | High-contrast secondary text `#2C3531` is the default | R |
 | Selection | Option tiles combine colour, 2px border and a check icon. Chips combine fill and colour. AM/PM uses `aria-pressed`. | R/S |
-| Focus | No visible focus style (`outline:none` on inputs, no `:focus` rules) | S |
+| Focus | 3px navy ring (white on navy) on `:focus-visible`; hidden screens are `inert`; Enter / Space activate `role="button"` cards | R/S |
 | Screen-reader labels | 31 static `aria-label`s are English only. Anna button and some others are localized. | S |
 | Reduced motion | Partial (see §7) | S |
 | Languages | English, German, Russian (395 strings each) | R/S |
@@ -368,15 +373,23 @@ The earlier spec's "buttons darken / settle on press" is not implemented.
 
 These are present in `index.html` today. They need your decision before anything in the app is changed.
 
-1. **Fonts.** 42 `<button>` elements set no `font-family`, so their labels fall back to the browser's button font (Arial in Chromium) instead of Inter. Affected: language tiles, frequency and intake tiles, select value, profile rows, language select, bottom-nav labels.
-2. **Medication Details buttons are compressed.** They are declared 80px (Edit) and 66px (Delete), but render at 46px and 37px when the details content is tall. The same buttons on Contact Details render at full size.
+1. ~~Fonts~~ — fixed, see §10a.
+2. ~~Medication Details buttons compressed~~ — fixed, see §10a.
 3. **Text below 14px.** Bottom-nav labels (13px), the relationship overline on the contact card (13px), and AM/PM in the schedule tile (12px).
-4. **No focus, hover, pressed or disabled states.**
+4. ~~No focus or pressed states~~ — fixed, see §10a. Hover and disabled styles still do not exist (none are used).
 5. **Reduced motion covers only the Welcome illustration.**
 6. **Not responsive.** A fixed 428px frame is clipped on phones narrower than about 442px.
 7. **Props vs fallbacks.** `emergencyColor` and `highContrast` defaults (`#AF5F3E`, true) differ from the code fallbacks (`#E07B4F`, false).
 8. **Language after reload.** The app always starts in English, although the chosen language is saved to `localStorage`.
 9. **Onboarding track width.** It is declared 6420px wide for 16 screens of 428px (6848px). The last screen overflows the container, but still renders.
+
+## 10a. UI fixes applied (2026-11-18)
+
+| # | Issue | Fix in `index.html` | Verified |
+|---|---|---|---|
+| 1 | 42 buttons rendered in Arial | `button:not([style*="font-family"]){font-family:inherit;line-height:1.15}`; inputs, selects and textareas also inherit | All button and container sizes unchanged in 39 states; only glyph widths changed by 1–7px. EN, DE, RU. |
+| 2 | Medication Details Edit / Delete squeezed to 46 / 37px (as low as 33 / 27px at larger text) | `flex: none` on both buttons in the scrolling column | 80 / 66px at text size 1, 90 / 75, 102 / 84, 112 / 92px at sizes 2–4, in EN, DE and RU. No text clipping. The content scrolls. |
+| 3 | No focus or pressed states | Focus ring and pressed filter (§8.1); keyboard access for tappable cards; `inert` on hidden screens | Keyboard test: Tab stays on screen and inside overlays; Enter opens cards and selects tiles. |
 
 ## 11. Changes from the previous spec (handoff)
 
@@ -388,7 +401,7 @@ These are present in `index.html` today. They need your decision before anything
 | Anna | Inline "Speak to Anna" tiles, floating entry | One top-right Anna button; lavender Anna sheet with voice input; Meet Anna screen |
 | Languages | EN, ES, DE, FR, RU | EN, DE, RU |
 | Minimum text size | 14px | 12px and 13px exist (see §10) |
-| Button press feedback | "darken / settle" | None |
+| Button press feedback | "darken / settle" | 15% darker on press (`brightness(.85)`), no animation |
 | Reduced motion | All decorative motion | Welcome illustration only |
 | Input text | 19px/500 | 20/500, 21/600 or 19/500 depending on screen |
 | Outline button radius | 16px | 16px or 18px depending on height |
