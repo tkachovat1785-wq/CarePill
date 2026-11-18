@@ -24,3 +24,7 @@ Version 2026-11-18. These documents were rebuilt from the app in this repository
 - no focus, hover or pressed states
 - partial reduced-motion support
 - no responsive layout below 442px
+
+## Visual component library
+
+The repository `Design-System-Care-Pill-App` has a visual library with components captured from this app (pages "Verified App Components" and "Spec Audit"). It uses the same values as these documents. Update PR: https://github.com/tkachovat1785-wq/Design-System-Care-Pill-App/pull/1

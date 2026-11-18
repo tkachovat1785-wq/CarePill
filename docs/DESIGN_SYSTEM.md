@@ -254,14 +254,14 @@ All sizes are at 428px, text scale 1×. "Seen on" names the screen where the com
 
 | Variant | Size | Style | Label | Seen on | Src |
 |---|---|---|---|---|---|
-| Primary CTA | 372×90 | bg navy, r18, primary shadow, trailing chevron | 22/700 white | Continue, Sign Up, Send Code, Next Step, Finish | R |
+| Primary CTA | 372×90 (364×90 on Sign Up / Log In, where side padding is 32) | bg navy, r18, primary shadow, trailing chevron | 22/700 white | Continue, Sign Up, Send Code, Next Step, Finish | R |
 | Primary, modal | 372×88 | as above | 23/700 | Take Med, Log as taken now | R |
 | Primary, modal footer | 372×90 | as above | 23/700 | Snooze 15 minutes, Close (snoozed) | R |
 | Primary, sheet / edit | 372×86 / 80 | as above | 21/700 | Save Changes, Save Time (86); Yes, call (80) | R |
 | Primary, dialog | 308×78 | as above | 20/700 | Log Out (dialog) | R |
 | Primary, Anna | 372×68 | r16, `0 10px 24px` shadow | 19/700 | Answer by voice | R |
 | Destructive, dialog | 308×78 | bg `#BA1A1A`, r18, destructive shadow | 20/700 white | Delete | R |
-| Outline, large | 372×84 / 80 / 76 | white, 2px navy, r18 | 20–21/700 navy | Log In (84), Edit Contact (80), Add Another Contact (76) | R |
+| Outline, large | 364×84 / 372×80 / 372×76 | white, 2px navy, r18 | 20–21/700 navy | Log In (364×84), Edit Contact (80), Add Another Contact (76) | R |
 | Outline | 372×76 / 72 / 70 / 66 / 64 | white, 2px navy, r16 | 18–21/700 navy | Go Back (76), Snooze / No (72), Cancel (70), Add New Contact (66), Add New Medication (64) | R |
 | On-navy button | 320×74 | white, no border, r16 | 21/700 navy | Take Now (hero card) | R |
 | Emergency outline | 330×56 | white, 2px `#AF5F3E`, r14 | 17/700 `#AF5F3E` | Resolve with Anna | R |
