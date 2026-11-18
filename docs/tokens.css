@@ -1,163 +1,156 @@
 /* CarePill — Design Tokens (HTML/CSS)
-   Drop into a global stylesheet. Values are authoritative; see DESIGN_SYSTEM.md. */
+   Version 2026-11-18. Values measured from index.html (commit 55aede1). See DESIGN_SYSTEM.md.
+   Source markers in comments: R = rendered measurement, S = read from app CSS. */
 
 :root {
   /* ---- Brand ---- */
-  --cp-navy: #04277D;          /* primary */
-  --cp-navy-soft: #5C6BB0;
-  --cp-navy-ink: #2C3E73;
-  --cp-teal: #0D5C4D;          /* secondary / success */
-  --cp-teal-deep: #0A4A3E;
+  --cp-navy: #04277D;              /* R primary */
+  --cp-navy-soft: #5C6BB0;         /* R ghost / "Tap to change" */
+  --cp-teal: #0D5C4D;              /* R success */
+  --cp-emergency: #AF5F3E;         /* R default prop emergencyColor (options #BA1A1A, #E07B4F) */
+  --cp-call-end: #E5453A;          /* R */
+  --cp-danger: #BA1A1A;            /* R */
+  --cp-danger-surface: #FBE9E9;    /* R */
 
   /* ---- Surfaces ---- */
-  --cp-bg: #FAF9F7;            /* app background */
-  --cp-surface: #FFFFFF;       /* cards / inputs */
-  --cp-mint: #E3F2EE;          /* splash + bottom-sheet popups */
-  --cp-mint-2: #E6F0EC;        /* icon chips */
-  --cp-mint-3: #F1F5F3;        /* timeline tiles */
-  --cp-lavender: #E0E7FF;      /* Anna / accents */
-  --cp-lavender-2: #E0E8FF;    /* contact avatar */
-  --cp-lavender-border: #C7D0F5;
+  --cp-bg: #FAF9F7;                /* R */
+  --cp-surface: #FFFFFF;           /* R */
+  --cp-mint: #E3F2EE;              /* R splash, auth, full-screen modals, mint sheets */
+  --cp-mint-chip: #E6F0EC;         /* R icon chips */
+  --cp-mint-tile: #F1F5F3;         /* R schedule time tile */
+  --cp-lavender: #E0E7FF;          /* R Anna sheet, selected chips/tiles */
+  --cp-lavender-voice: #E7ECFF;    /* R voice replay button */
+  --cp-lavender-avatar: #E0E8FF;   /* R avatars */
+  --cp-lavender-border: #C7D0F5;   /* S */
+  --cp-close-bg: #EEF1EF;          /* R modal close */
+  --cp-close-border: #C9D5D1;      /* S */
+  --cp-info-bg: rgba(255,255,255,.55); /* R "How to take it" panel */
+  --cp-info-border: #CFE0DA;       /* S */
+  --cp-selected-tint: rgba(4,39,125,.05); /* R selected option tile */
+  --cp-nav-active: rgba(4,39,125,.10);    /* R */
 
   /* ---- Text ---- */
-  --cp-text: #1E2E29;          /* primary body */
-  --cp-heading: #04277D;       /* headings on brand */
-  --cp-text-secondary: #4A5955;
-  --cp-text-secondary-hc: #2C3531;   /* high-contrast mode */
-  --cp-text-popup: #3A6359;    /* popup body */
-  --cp-text-muted-indigo: #5C6BB0;
+  --cp-text: #1E2E29;              /* R */
+  --cp-heading: #04277D;           /* R */
+  --cp-text-secondary: #2C3531;    /* R (highContrast: true, the default) */
+  --cp-text-secondary-low: #4A5955;/* S (highContrast: false) */
+  --cp-text-popup: #3A6359;        /* R */
+  --cp-text-modal-detail: #234B43; /* R */
+  --cp-text-modal-label: #2F5249;  /* R */
+  --cp-text-anna: #243A6E;         /* R */
+  --cp-text-on-navy: #A9D7CC;      /* R */
+  --cp-placeholder: #BFC9C4;       /* R */
+  --cp-icon-muted: #9AA8A3;        /* R */
 
-  /* ---- AM/PM (secondary control) ---- */
-  --cp-ampm-on-bg: #EAEEF7;
-  --cp-ampm-on-fg: #3E4A66;
-  --cp-ampm-on-border: #AEB9D6;
-  --cp-ampm-off-bg: #F5F7FB;
-  --cp-ampm-off-fg: #707B95;
-  --cp-ampm-off-border: #DCE4E2;
+  /* ---- AM/PM ---- */
+  --cp-ampm-on-bg: #EAEEF7;  --cp-ampm-on-fg: #3E4A66;  --cp-ampm-on-border: #AEB9D6;   /* R */
+  --cp-ampm-off-bg: #F5F7FB; --cp-ampm-off-fg: #707B95; --cp-ampm-off-border: #DCE4E2;  /* R */
 
-  /* ---- Destructive / emergency ---- */
-  --cp-danger: #BA1A1A;
-  --cp-danger-surface: #FBE9E9;
-  --cp-call-end: #E5453A;
-  --cp-emergency: #E07B4F;     /* prop: emergencyColor */
-
-  /* ---- Borders ---- */
-  --cp-border: #DCE4E2;
-  --cp-border-2: #E8ECEA;
-  --cp-border-3: #E2E7E5;
+  /* ---- Borders (S: exact widths from CSS) ---- */
+  --cp-border: #DCE4E2;            /* 1.5px inputs, chips, back button */
+  --cp-border-card: #E8ECEA;       /* 1.5px cards */
+  --cp-border-tile: #E2E7E5;       /* 1.5px profile rows, day pills; 2px intake tiles */
+  --cp-border-nav: #EAEEEC;        /* 1.5px bottom nav */
   --cp-divider: #EEF1EF;
+  --cp-divider-list: #F0F2F0;
 
-  /* ---- Status ---- */
-  --cp-taken-bg: #E6F4EF;
-  --cp-taken-fg: #0D5C4D;
+  /* ---- Scrims (S) ---- */
+  --cp-scrim-sheet: rgba(8,30,24,.5);
+  --cp-scrim-dialog: rgba(8,30,24,.55);
+  --cp-scrim-anna: rgba(8,16,40,.5);
 
-  /* ---- Radius ---- */
-  --cp-r-btn: 18px;
-  --cp-r-btn-sm: 16px;
+  /* ---- Typography ---- */
+  --cp-font: Inter, sans-serif;
+  --cp-text-scale: 1;              /* steps: 1, 1.13, 1.27, 1.4 (app applies via CSS zoom) */
+
+  /* ---- Layout ---- */
+  --cp-artboard-w: 428px;
+  --cp-artboard-h: 926px;
+  --cp-gutter: 28px;
+
+  /* ---- Radius (R) ---- */
+  --cp-r-frame: 46px;
+  --cp-r-btn: 18px;                /* primary buttons, large outline (>=76px) */
+  --cp-r-btn-sm: 16px;             /* outline 64-76px, inputs, tiles */
+  --cp-r-field-sm: 14px;           /* back button, profile input, dose chips, ghost */
+  --cp-r-close: 13px;
+  --cp-r-chip-sm: 12px;            /* edit-medication dose chips */
   --cp-r-card: 20px;
-  --cp-r-chip: 14px;
+  --cp-r-card-sm: 18px;
+  --cp-r-card-time: 22px;
+  --cp-r-hero: 26px;
+  --cp-r-nav: 24px;
   --cp-r-sheet: 34px;
   --cp-r-dialog: 26px;
   --cp-r-pill: 999px;
 
-  /* ---- Shadows ---- */
+  /* ---- Shadows (R) ---- */
   --cp-sh-primary: 0 12px 26px rgba(4,39,125,.22);
   --cp-sh-danger: 0 10px 24px rgba(186,26,26,.25);
-  --cp-sh-card-soft: 0 2px 8px rgba(13,92,77,.04);
+  --cp-sh-input: 0 1px 2px rgba(0,0,0,.04);
   --cp-sh-card: 0 4px 14px rgba(13,92,77,.05);
   --cp-sh-card-raised: 0 6px 18px rgba(13,92,77,.06);
-  --cp-sh-input: 0 1px 2px rgba(0,0,0,.04);
-  --cp-sh-sheet: 0 -10px 40px rgba(8,30,24,.18);
+  --cp-sh-hero: 0 18px 38px rgba(4,39,125,.26);
+  --cp-sh-nav: 0 12px 30px rgba(13,92,77,.1);
+  --cp-sh-dropdown: 0 8px 22px rgba(0,0,0,.08);
   --cp-sh-dialog: 0 24px 60px rgba(8,30,24,.3);
+  --cp-sh-anna-sheet: 0 -10px 40px rgba(8,16,40,.28);
 
-  /* ---- Scrims ---- */
-  --cp-scrim-sheet: rgba(8,30,24,.5);
-  --cp-scrim-dialog: rgba(8,30,24,.55);
-
-  /* ---- Type ---- */
-  --cp-font: "Inter", -apple-system, sans-serif;
-
-  /* ---- Font-scale accessibility (multiply sizes by this) ---- */
-  --cp-font-scale: 1;          /* steps: 1, 1.13, 1.27, 1.4 */
+  /* ---- Motion (S) ---- */
+  --cp-ease-sheet: cubic-bezier(.2,.8,.2,1);
+  --cp-ease-track: cubic-bezier(.4,0,.2,1);
+  --cp-dur-sheet: .35s;
+  --cp-dur-track: .42s;
 }
 
-/* ===== Motion ===== */
+/* ===== Motion (S) ===== */
 @keyframes cpFade { 0% { opacity: 0 } 100% { opacity: 1 } }
 @keyframes cpUp   { 0% { transform: translateY(100%) } 100% { transform: translateY(0) } }
 @keyframes cpPop  { 0% { transform: scale(.7); opacity: 0 } 60% { transform: scale(1.06) } 100% { transform: scale(1); opacity: 1 } }
-@keyframes cpGlide{ 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
-@keyframes cpRoll { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-@keyframes cpSway { 0%,100% { transform: rotate(0deg) } 50% { transform: rotate(7deg) } }
-@keyframes cpDrift{ 0% { opacity: 0; transform: translateX(10px) } 35% { opacity: .5 } 100% { opacity: 0; transform: translateX(-32px) } }
+@keyframes cpPulse{ 0% { transform: scale(1); opacity: .55 } 70% { transform: scale(1.9); opacity: 0 } 100% { transform: scale(1.9); opacity: 0 } }
+@keyframes cpToast{ 0% { transform: translateY(14px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
+/* App today: reduced motion only stops .cp-ride and .cp-wheel (Welcome illustration). */
+@media (prefers-reduced-motion: reduce) { .cp-ride, .cp-wheel { animation: none !important; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .cp-ride, .cp-wheel { animation: none !important; }
-}
+/* ===== Component recipes (match the app's measured values) =====
+   The app sets these styles inline per state. The [aria-pressed] / [aria-current] selectors below are
+   a recipe for reuse, not attributes the app itself always sets. */
+.cp-btn { font-family: var(--cp-font); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; cursor: pointer; }
+.cp-btn-primary   { height: 90px; border: none; border-radius: var(--cp-r-btn); background: var(--cp-navy); color: #fff; font-size: 22px; box-shadow: var(--cp-sh-primary); }
+.cp-btn-primary--sheet  { height: 80px; font-size: 21px; }
+.cp-btn-primary--dialog { height: 78px; font-size: 20px; }
+.cp-btn-outline   { height: 64px; border: 2px solid var(--cp-navy); border-radius: var(--cp-r-btn-sm); background: #fff; color: var(--cp-navy); font-size: 18px; }
+.cp-btn-outline--lg { height: 80px; border-radius: var(--cp-r-btn); font-size: 20px; }
+.cp-btn-ghost     { height: 60px; border: none; border-radius: var(--cp-r-field-sm); background: transparent; color: var(--cp-navy-soft); font-size: 19px; }
+.cp-btn-ghost-danger { height: 66px; border: none; border-radius: var(--cp-r-btn-sm); background: transparent; color: var(--cp-danger); font-size: 18px; }
+.cp-btn-danger    { height: 78px; border: none; border-radius: var(--cp-r-btn); background: var(--cp-danger); color: #fff; font-size: 20px; box-shadow: var(--cp-sh-danger); }
+.cp-btn-emergency { height: 56px; border: 2px solid var(--cp-emergency); border-radius: var(--cp-r-field-sm); background: #fff; color: var(--cp-emergency); font-size: 17px; }
+.cp-btn-back      { width: 46px; height: 46px; border: 1.5px solid var(--cp-border); border-radius: var(--cp-r-field-sm); background: #fff; }
+.cp-btn-close     { width: 44px; height: 44px; border: 1.5px solid var(--cp-close-border); border-radius: var(--cp-r-close); background: var(--cp-close-bg); }
 
-/* ===== Component recipes ===== */
-
-.cp-btn-primary {
-  height: 90px; border: none; border-radius: var(--cp-r-btn);
-  background: var(--cp-navy); color: #fff;
-  font: 700 22px/1 var(--cp-font);
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  cursor: pointer; box-shadow: var(--cp-sh-primary);
-}
-.cp-btn-secondary {
-  height: 72px; border-radius: var(--cp-r-btn-sm);
-  border: 2px solid var(--cp-navy); background: #fff; color: var(--cp-navy);
-  font: 700 20px/1 var(--cp-font); cursor: pointer;
-}
-.cp-btn-ghost {
-  height: 64px; border: none; background: transparent;
-  color: var(--cp-text-muted-indigo); font: 700 19px/1 var(--cp-font); cursor: pointer;
-}
-.cp-btn-danger { /* used inside confirm dialog */
-  height: 78px; border: none; border-radius: var(--cp-r-btn);
-  background: var(--cp-danger); color: #fff; font: 700 20px/1 var(--cp-font);
-  box-shadow: var(--cp-sh-danger); cursor: pointer;
-}
-.cp-input {
-  height: 74px; width: 100%; border-radius: var(--cp-r-btn-sm);
-  border: 1.5px solid var(--cp-border); background: #fff; padding: 0 22px;
-  font: 500 19px/1 var(--cp-font); color: var(--cp-text);
-  box-shadow: var(--cp-sh-input); outline: none;
-}
+.cp-input { width: 100%; height: 72px; padding: 0 22px; border: 1.5px solid var(--cp-border); border-radius: var(--cp-r-btn-sm); background: #fff; font: 500 20px var(--cp-font); color: var(--cp-text); box-shadow: var(--cp-sh-input); outline: none; box-sizing: border-box; }
 .cp-input--error { border-color: var(--cp-danger); }
+.cp-field-label { font: 600 17px var(--cp-font); color: var(--cp-heading); }
+.cp-field-error { font: 600 16px var(--cp-font); color: var(--cp-danger); }
 
-.cp-card {
-  background: #fff; border: 1.5px solid var(--cp-border-2);
-  border-radius: var(--cp-r-card); padding: 18px 20px; box-shadow: var(--cp-sh-card-raised);
-  display: flex; align-items: center; gap: 16px;
-}
-.cp-icon-chip {
-  width: 52px; height: 52px; flex: none; border-radius: var(--cp-r-chip);
-  background: var(--cp-mint-2); display: flex; align-items: center; justify-content: center;
-}
+.cp-option { display: flex; align-items: center; gap: 16px; width: 100%; padding: 20px; border: 2px solid var(--cp-border); border-radius: var(--cp-r-btn-sm); background: #fff; font: 600 20px var(--cp-font); color: var(--cp-text); }
+.cp-option[aria-pressed="true"] { border-color: var(--cp-navy); background: var(--cp-selected-tint); }
+.cp-chip { height: 55px; padding: 16px 22px; border: 1.5px solid var(--cp-border); border-radius: var(--cp-r-field-sm); background: #fff; color: var(--cp-navy); font: 700 18px var(--cp-font); }
+.cp-chip[aria-pressed="true"] { background: var(--cp-navy); border-color: var(--cp-navy); color: #fff; }
 
-/* Bottom-sheet popup (canonical confirmation) */
-.cp-sheet-scrim {
-  position: absolute; inset: 0; z-index: 97; background: var(--cp-scrim-sheet);
-  display: flex; flex-direction: column; justify-content: flex-end; animation: cpFade .25s ease;
-}
-.cp-sheet {
-  background: var(--cp-mint); border-radius: var(--cp-r-sheet) var(--cp-r-sheet) 0 0;
-  padding: 30px 28px 36px; animation: cpUp .35s cubic-bezier(.2,.8,.2,1);
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-}
-.cp-sheet__title { margin: 0; font: 700 25px/1.1 var(--cp-font); color: var(--cp-heading); text-align: center; }
-.cp-sheet__body  { margin: 0; font: 600 19px/1.5 var(--cp-font); color: var(--cp-text-popup); text-align: center; text-wrap: pretty; }
+.cp-card { background: #fff; border: 1.5px solid var(--cp-border-card); border-radius: var(--cp-r-card); padding: 18px 20px; box-shadow: var(--cp-sh-card); }
+.cp-card--raised { box-shadow: var(--cp-sh-card-raised); }
+.cp-hero { background: var(--cp-navy); border-radius: var(--cp-r-hero); padding: 26px; box-shadow: var(--cp-sh-hero); color: #fff; }
 
-/* Centered destructive dialog */
-.cp-dialog-scrim {
-  position: absolute; inset: 0; z-index: 99; background: var(--cp-scrim-dialog);
-  display: flex; align-items: center; justify-content: center; padding: 28px; animation: cpFade .2s ease;
-}
-.cp-dialog {
-  width: 100%; max-width: 360px; background: #fff; border-radius: var(--cp-r-dialog);
-  padding: 30px 26px 24px; box-shadow: var(--cp-sh-dialog); animation: cpPop .3s ease;
-}
+.cp-nav { display: flex; justify-content: space-around; background: #fff; border: 1.5px solid var(--cp-border-nav); border-radius: var(--cp-r-nav); padding: 10px 8px; box-shadow: var(--cp-sh-nav); }
+.cp-nav__tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 0; border: none; border-radius: 16px; background: transparent; color: var(--cp-icon-muted); font: 700 13px var(--cp-font); }
+.cp-nav__tab[aria-current="page"] { background: var(--cp-nav-active); color: var(--cp-navy); }
 
-/* The medication capsule icon — pivot rotation about the viewBox CENTER (do not use a corner). */
-/* <svg viewBox="0 0 24 24"><rect x="5.5" y="9" width="13" height="6" rx="3"
-       transform="rotate(-45 12 12)" fill="#04277D"/></svg> */
+.cp-sheet-scrim  { position: absolute; inset: 0; background: var(--cp-scrim-sheet); display: flex; flex-direction: column; justify-content: flex-end; animation: cpFade .25s ease; }
+.cp-sheet        { background: var(--cp-mint); border-radius: var(--cp-r-sheet) var(--cp-r-sheet) 0 0; padding: 30px 28px 36px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: cpUp var(--cp-dur-sheet) var(--cp-ease-sheet); }
+.cp-sheet--anna  { background: var(--cp-lavender); padding: 26px 28px 34px; gap: 16px; box-shadow: var(--cp-sh-anna-sheet); }
+.cp-dialog-scrim { position: absolute; inset: 0; background: var(--cp-scrim-dialog); display: flex; align-items: center; justify-content: center; padding: 28px; animation: cpFade .2s ease; }
+.cp-dialog       { width: 100%; max-width: 360px; background: #fff; border-radius: var(--cp-r-dialog); padding: 30px 26px 24px; box-shadow: var(--cp-sh-dialog); animation: cpPop .3s ease; }
+
+/* Medication capsule icon: rotate about the viewBox centre.
+   <svg viewBox="0 0 24 24"><rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="#04277D"/></svg> */

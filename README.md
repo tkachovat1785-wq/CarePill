@@ -9,7 +9,7 @@ It runs entirely in the browser on a single 428 × 926 mobile artboard.
 |---|---|
 | `index.html` | The app (exported from the design tool as `CarePill Onboarding.dc.html`). |
 | `support.js` | Runtime that `index.html` needs. Keep it next to `index.html`. |
-| `docs/` | Design-system and screen documentation. See [`docs/README.md`](docs/README.md). |
+| `docs/` | Design system, screen inventory and tokens, rebuilt from this app. See [`docs/README.md`](docs/README.md). |
 
 ## Opening the app
 

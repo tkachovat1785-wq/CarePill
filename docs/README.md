@@ -1,33 +1,26 @@
 # CarePill documentation
 
-These files come unchanged from the CarePill design project's handoff bundle (`design_handoff_carepill/`).
+Version 2026-11-18. These documents were rebuilt from the app in this repository (`index.html`, commit `55aede1`). They replace the earlier design-handoff versions, whose differences from the app are listed in `DESIGN_SYSTEM.md` §11.
 
 | File | Content |
 |---|---|
-| `DESIGN_SYSTEM.md` | Colours, typography, spacing, radius, shadow, motion, component recipes, accessibility. |
-| `SCREEN_INVENTORY.md` | Screens, overlays, flows and state, as described in the handoff. |
-| `tokens.css` | Design tokens as CSS custom properties. All 31 colour values in it are used in `index.html`. |
+| `DESIGN_SYSTEM.md` | Layout, colours, typography, spacing, radius, elevation, motion, components, accessibility. Each value is marked R (rendered measurement), S (read from the app's CSS) or A (assumption). |
+| `SCREEN_INVENTORY.md` | Every onboarding screen, app tab and overlay in the current flow, including the Meet Anna screen. |
+| `tokens.css` | CSS custom properties and component recipes with the same values. |
 
-## Differences from the app (checked 2026-11-18)
+## How the values were measured
 
-The handoff documents were written before the latest app version. Where they disagree, `index.html` is the source of truth.
+- **Browser and states:** headless Chromium at 428×926 with the app's default props. 41 screen states were walked through in English, and in German and Russian where relevant.
+- **Measurement:** `getComputedStyle` and `getBoundingClientRect` on every visible button, input, text and container.
+- **Borders:** Chromium reports 1.5px borders as 1px, so border widths are taken from the CSS source.
 
-1. **Languages.** `SCREEN_INVENTORY.md` lists Spanish and French on the Language screen. The app supports English, German and Russian only.
-2. **Onboarding order and step numbers.** The app's order is:
-   - 0 Splash
-   - 1 Language
-   - 2 Phone
-   - 3 SMS code
-   - 4 Name
-   - 5 Welcome
-   - 6 **Meet Anna**
-   - 7 Emergency contact
-   - 8 Contact saved
-   - 9 Medication intro
-   - 10–14 Medication steps 1–5 (name, dosage, frequency, reminder time, how to take it)
-   - 15 Medication added
+## Open issues in the app
 
-   Sign Up / Log In is a separate entry screen after Language. `SCREEN_INVENTORY.md` uses an older order and has no Meet Anna screen.
-3. **Anna entry point.** The app has one Anna button at the top right. The inline "Speak to Anna" tiles described in `SCREEN_INVENTORY.md` are no longer in the app.
-4. **`emergencyColor` default.** `DESIGN_SYSTEM.md` and `tokens.css` give `#E07B4F`. The app's default prop value is `#AF5F3E`, and `#E07B4F` is one of its options.
-5. **Missing folders.** `react-tailwind/` and `prototype/`, which the handoff refers to, were not part of the source and are not included.
+`DESIGN_SYSTEM.md` §10 lists issues found in the app. They are documented, not fixed, and wait for a decision:
+
+- buttons rendering in Arial instead of Inter
+- compressed buttons on Medication Details
+- text below 14px
+- no focus, hover or pressed states
+- partial reduced-motion support
+- no responsive layout below 442px

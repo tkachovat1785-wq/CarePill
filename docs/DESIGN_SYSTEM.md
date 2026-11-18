@@ -1,241 +1,395 @@
 # CarePill — Design System Specification
 
-Mobile artboard: **428 × 926** px (iPhone-style). Font: **Inter** (400/500/600/700/800).
-All values below are exact and authoritative.
+**Version:** 2026-11-18. Rebuilt from the app in this repository (`index.html` at commit `55aede1`). This replaces the earlier handoff spec.
+
+**Single source of truth:** where this document and `index.html` disagree, `index.html` wins.
+
+## How the values were obtained
+
+Every value has a source marker:
+
+| Marker | Meaning |
+|---|---|
+| **R** | **Rendered.** Measured with `getComputedStyle` / `getBoundingClientRect` in Chromium at 428×926, default props, across 41 screen states (onboarding, Pillbox, overlays, Profile, EN/DE/RU). |
+| **S** | **Source.** Read directly from the inline CSS / logic in `index.html`. Used where rendering cannot show the exact value (for example 1.5px borders, which Chromium reports as `1px`) or for states that were not rendered. |
+| **A** | **Assumption.** Not verified. Stated as guidance only. |
+
+"Default props" means the values the app ships with:
+
+- `highContrast: true`
+- `showAnna: true`
+- `navAccent: #04277D`
+- `emergencyColor: #AF5F3E`
+
+Note that the JavaScript fallbacks differ: `highContrast ?? false` and `emergencyColor ?? '#E07B4F'`. These apply only if the runtime passes no props. **S**
+
+Known inconsistencies in the app itself are listed in [§10](#10-known-inconsistencies-in-the-app-not-fixed). They are documented here, not fixed.
 
 ---
 
-## 1. Color
+## 1. Artboard and layout
 
-### Brand / primary
-| Token | Hex | Usage |
+| Item | Value | Src |
 |---|---|---|
-| `navy` (primary) | `#04277D` | Primary buttons, headings, key icons, skateboard deck, nav accent |
-| `navy-soft` | `#5C6BB0` | Deck highlight, muted affordance text ("Tap to change") |
-| `navy-ink` | `#2C3E73` | Illustration trousers / deep navy shading |
-| `teal` (secondary / success) | `#0D5C4D` | Success check fill, woman's sweater, secondary brand |
-| `teal-deep` | `#0A4A3E` / `#0A3A30` | Illustration shading |
+| Artboard | 428 × 926 px phone frame, radius 46px, `overflow:hidden` | R |
+| Page around the frame | Frame centred; page height 1034px (54px above and below) | R |
+| Responsive behaviour | **None.** The frame is always 428px wide. Below ~442px viewport width it is clipped left and right: at 390px, 19px per side; at 375px, 26px; at 320px, 54px. No scaling, no breakpoints, no `@media` width queries. | R |
+| Status bar | Static "9:41", notch 122×32 radius 18 | R |
+| Screen side padding | 28px (onboarding screens, Pillbox, Profile, overlays) | R/S |
+| Top padding (screens with back button) | 62px; detail screens 70px | S |
+| Onboarding track | Horizontal flex row. `translateX(-obStep × 428px)`, `transition: transform .42s cubic-bezier(.4,0,.2,1)`. 16 screens; the container is declared 6420px wide (15 × 428). | R/S |
+| Scroll areas | `.cp-scroll` hides scrollbars | S |
 
-### Surfaces & backgrounds
-| Token | Hex | Usage |
-|---|---|---|
-| `bg-app` | `#FAF9F7` | App background (most screens) |
-| `surface` | `#FFFFFF` | Cards, inputs, time-picker sheet |
-| `mint` | `#E3F2EE` | Splash bg, **bottom-sheet popups** (reminder, snooze, snoozed, call-confirm, action-complete), icon accents |
-| `mint-2` | `#E6F0EC` | Icon chips / medication icon container |
-| `mint-3` | `#F1F5F3` | Timeline icon tiles |
-| `lavender` | `#E0E7FF` | "Anna" assistant surfaces, accent blobs, collar trim, selected schedule chip |
-| `lavender-2` | `#E0E8FF` | Contact avatar background |
-| `lavender-border` | `#C7D0F5` | Border on lavender surfaces |
+---
 
-### Text
-| Token | Hex | Usage |
-|---|---|---|
-| `text-primary` | `#1E2E29` | Body / primary content text |
-| `text-heading` | `#04277D` | Headings, labels on brand |
-| `text-secondary` | `#4A5955` | Secondary text & captions (default) |
-| `text-secondary-hc` | `#2C3531` | Secondary text in **high-contrast** mode |
-| `text-popup-body` | `#3A6359` | Body copy inside mint bottom-sheet popups |
-| `text-muted-indigo` | `#5C6BB0` | "Tap to change", "Skip for now" |
+## 2. Color
 
-### AM/PM (secondary time-format control) — deliberately softer than primary chips
-| State | bg | text | border |
+### 2.1 Brand
+
+| Token | Hex | Use | Src |
 |---|---|---|---|
-| selected | `#EAEEF7` | `#3E4A66` | `2px #AEB9D6` |
-| unselected | `#F5F7FB` | `#707B95` | `1.5px #DCE4E2` |
-| check icon | — | `#5C6BB0` | — |
+| `navy` | `#04277D` | Primary buttons, headings, labels, icons, selected borders. Most used colour (417 occurrences). | R |
+| `teal` | `#0D5C4D` | Success circles, "Taken" chip text, "Emergency contact" status text | R |
+| `navy-soft` | `#5C6BB0` | "Skip for now", "Tap to change", "Tap to hear it again" | R |
+| `emergency` | `#AF5F3E` (default prop) | Call buttons, "Resolve with Anna" outline, missed labels. Options: `#AF5F3E`, `#BA1A1A`, `#E07B4F`. | R/S |
+| `call-end` | `#E5453A` | End-call button, shadow `0 12px 30px rgba(229,69,58,.4)` | R |
+| `danger` | `#BA1A1A` | Destructive buttons and labels, input error border and text | R |
+| `danger-surface` | `#FBE9E9` | Delete-dialog icon circle | R |
 
-### Destructive
-| Token | Hex | Usage |
+### 2.2 Surfaces
+
+| Token | Hex | Use | Src |
+|---|---|---|---|
+| `bg-app` | `#FAF9F7` | Screens, Medication Details, contact picker sheet, stepper buttons | R |
+| `surface` | `#FFFFFF` | Cards, inputs, chips, dialogs, time-picker sheet, history sheet | R |
+| `mint` | `#E3F2EE` | Splash, Sign Up / Log In screen, **full-screen** reminder / missed / taken / snooze modals, call-confirm and action-complete bottom sheets, toasts | R |
+| `mint-chip` | `#E6F0EC` | Icon chips (name screen 72×72 r20, med-added 52×52 r14, detail 78×78 r22) | R |
+| `mint-tile` | `#F1F5F3` | Schedule time tile 54×54 r15 | R |
+| `lavender` | `#E0E7FF` | Anna sheet, selected time-of-day chip, selected intake tile, 12-hour toggle | R |
+| `lavender-voice` | `#E7ECFF` | "Voice reminder playing" button in reminder modal | R |
+| `lavender-avatar` | `#E0E8FF` | Contact / profile avatars | R |
+| `lavender-border` | `#C7D0F5` | Borders on lavender surfaces | R/S |
+| `close-chip` | `#EEF1EF` + border `#C9D5D1` | Close button in full-screen modals (44×44 r13) | R |
+| `info-panel` | `rgba(255,255,255,.55)` + border `#CFE0DA` | "How to take it" panel in reminder modals | R |
+| `selected-tint` | `rgba(4,39,125,.05)` + 2px `#04277D` | Selected option tile (language, frequency) | R |
+| `nav-active` | `rgba(4,39,125,.10)` | Active bottom-nav tab | R |
+
+### 2.3 Text
+
+| Token | Hex | Use | Src |
+|---|---|---|---|
+| `text-primary` | `#1E2E29` | Input text, option labels, names, date heading | R |
+| `text-heading` | `#04277D` | Titles, field labels, button labels | R |
+| `text-secondary` | `#2C3531` | Body paragraphs and captions. Rendered with `highContrast: true` (the default). | R |
+| `text-secondary-low` | `#4A5955` | Same role when `highContrast` is false. Not rendered with default props. | S |
+| `text-popup` | `#3A6359` | Body text on mint (auth tagline, snooze text, call-confirm text, "Connecting") | R |
+| `text-modal-detail` | `#234B43` | Dose / time line in reminder modal | R |
+| `text-modal-label` | `#2F5249` | "HOW TO TAKE IT" overline | R |
+| `text-anna` | `#243A6E` | Anna sheet hint text, Anna toast text | R |
+| `text-on-navy-muted` | `#A9D7CC` | Secondary text on the navy "Next dose" card | R |
+| `placeholder` | `#BFC9C4` | Select-field placeholder ("Select relationship") | R |
+| `icon-muted` | `#9AA8A3` | Inactive nav labels and icons, chevrons | R |
+
+### 2.4 Borders
+
+| Token | Value | Use | Src |
+|---|---|---|---|
+| `border` | 1.5px `#DCE4E2` | Inputs, select, back button, chips, stepper buttons (45 uses) | S |
+| `border-strong` | 2px `#04277D` | Outline buttons, selected tiles and chips (22 uses) | S |
+| `border-card` | 1.5px `#E8ECEA` | Cards (detail rows, contact card, schedule card) | S |
+| `border-tile` | 1.5px `#E2E7E5` | Profile rows, day-navigation pills; 2px on intake tiles | S |
+| `border-option` | 2px `#DCE4E2` | Unselected option tiles (language, frequency) | R/S |
+| `divider` | 1px `#F0F2F0` (dropdown rows), 1px `#EEF1EF` (list rows) | S |
+| `nav-border` | 1.5px `#EAEEEC` | Bottom-nav container | S |
+
+### 2.5 AM/PM control (intentionally softer than chips)
+
+| State | bg | text | border | Src |
+|---|---|---|---|---|
+| Selected | `#EAEEF7` | `#3E4A66` 20px/600 | 2px `#AEB9D6` | R |
+| Unselected | `#F5F7FB` | `#707B95` 20px/600 | 1.5px `#DCE4E2` | R/S |
+
+### 2.6 Scrims
+
+| Use | Value | Src |
 |---|---|---|
-| `danger` | `#BA1A1A` | Delete buttons/labels, error text, missed-dose marker |
-| `danger-surface` | `#FBE9E9` | Confirm-dialog destructive icon circle |
-| `call-end` | `#E5453A` | End-call button |
-
-### Emergency
-| Token | Hex | Usage |
-|---|---|---|
-| `emergency` | `#E07B4F` (prop `emergencyColor`) | Call buttons / emergency accent |
-
-### Borders & dividers
-| Token | Hex | Usage |
-|---|---|---|
-| `border` | `#DCE4E2` | Default input/card outline |
-| `border-2` | `#E8ECEA` | Card outline (softer) |
-| `border-3` | `#E2E7E5` | Tiles / day chips |
-| `divider` | `#EEF1EF` | Hairline dividers, segmented bg |
-
-### Status / chips
-| Token | Hex | Usage |
-|---|---|---|
-| taken chip | bg `#E6F4EF`, text `#0D5C4D` | "Taken" status |
-| missed marker | `#BA1A1A` | missed dose |
-| grey neutral | `#9AA8C8` / `#9AA8A3` | skateboard hardware, chevrons |
-| hair silver | `#C9D2E0` | illustration hair |
-| skin | `#D6A07C` (shade `#C2895F`) | illustration skin |
-
-> **Rule:** navy + teal are the only dominant colors. Mint & lavender are accents. Do not introduce new
-> dominant hues. Cheek blush (`#E8A78F`, ~50% opacity) is decorative-only.
+| Bottom sheets (call confirm, time picker, history, contact picker, action complete) | `rgba(8,30,24,.5)` | S |
+| Centered dialogs (delete, log out) | `rgba(8,30,24,.55)` | S |
+| Anna sheet | `rgba(8,16,40,.5)` + `backdrop-filter: blur(3px)` | S |
 
 ---
 
-## 2. Typography
+## 3. Typography
 
-Family: **Inter**, `-apple-system, sans-serif` fallback.
+**Family:** `Inter, sans-serif`, loaded from Google Fonts at weights 400/500/600/700/800. **R**
 
-| Role | Size | Weight | Letter-spacing | Color | Notes |
+There are 42 buttons whose styles set no `font-family`. Their labels render in the browser's default button font (Arial in Chromium) instead of Inter. See [§10](#10-known-inconsistencies-in-the-app-not-fixed). **R/S**
+
+| Role | Size / weight | Letter-spacing | Line height | Colour | Example | Src |
+|---|---|---|---|---|---|---|
+| Time value (picker) | 64 / 800 | -2px | 64px | navy | Time picker digits | R |
+| Time value (cards) | 60 / 700 | -1.5px | 60px | navy | Reminder Time cards | R |
+| Brand title | 40 / 800 | -1px | normal | navy | "CarePill" (auth) | R |
+| Meet Anna title | 38 / 800 | -0.5px | 1.2 | navy | "Meet Anna" | R |
+| Modal title | 34 / 800 | -0.5px | 1.2 | navy | Reminder med name, "Reminder Snoozed" | R |
+| Display | 32 / 700 | -0.5px | normal | navy | "Welcome, Maria!", "Taken!" | R |
+| Screen title, large | 30 / 700 | -0.4px | normal | navy | "Choose your language", "What's your name?" | R |
+| Detail name | 30 / 800 | -0.4px | normal | navy | Medication / contact details | R |
+| Screen title | 28 / 700 | -0.4px | normal | navy | "Emergency Contact", medication steps | R |
+| Success title | 26 / 700 | -0.4px | normal | navy | "Medication Added", "Edit Medication" | R |
+| Date heading | 26 / 700 | -0.2px | normal | `#1E2E29` | "Thursday, June 18" | R |
+| Dialog title | 25 / 800 | -0.3px | normal | navy | "Delete this medication?", "Log out?" | R |
+| Sheet title | 25 / 700 | normal | normal | navy | "Do you want to call?" | R |
+| Anna sheet text | 24 / 700 | normal | 34.8px | navy | "How can I help today?" | R |
+| Primary button label | 22 / 700 | normal | normal | white | 90px CTAs | R |
+| Modal button label | 23 / 700 | normal | normal | white | "Take Med", "Snooze 15 minutes" | R |
+| Secondary button label | 18–21 / 700 | normal | normal | navy | Outline buttons | R |
+| Option label | 20 / 600 | normal | normal | `#1E2E29` | Frequency and language tiles (renders in Arial) | R |
+| Body large | 20 / 400 | normal | 30px | `#2C3531` | Welcome / Taken paragraph | R |
+| Body | 19 / 400 | normal | 1.45 (27.55px) | `#2C3531` | Screen intros | R |
+| Body small | 18 / 400 | normal | 1.45–1.5 | `#2C3531` | Emergency intro, Meet Anna hint | R |
+| Input text | 20 / 500 (forms), 21 / 600 (name, medication), 19 / 500 (profile) | normal | — | `#1E2E29` | Inputs | R |
+| Field label | 17 / 600 | normal | normal | navy | "First Name", "Full Name" | R |
+| Error text | 16 / 600 | normal | normal | `#BA1A1A` | Field errors | R |
+| Overline | 15 / 600–700 | 0.4–0.6px | normal | `#2C3531` / navy, UPPERCASE | "STEP 1 OF 2 · SAFETY", "NEXT DOSE" | R |
+| Detail overline | 14 / 700 | 0.4–0.5px | normal | `#2C3531`, UPPERCASE | Detail rows, "HOUR" / "MIN" | R |
+| Status chip | 14 / 700 | normal | normal | `#AF5F3E` | "Missed" | R |
+| Nav label | 13 / 700 | normal | normal | navy active, `#9AA8A3` inactive | Bottom nav (renders in Arial) | R |
+| Small caption | 13 / 600, 12 / 700 | 0.4px / normal | normal | `#2C3531` | Contact relationship (13), schedule "AM" (12) | R |
+
+**Minimum size.** The earlier spec said "nothing below 14px". The app has three text styles below that: 13px nav labels, 13px relationship overline, and the 12px AM/PM inside the schedule time tile. **R**
+
+**Text-size scale.** `[1, 1.13, 1.27, 1.4]`, applied with CSS `zoom` on screens and overlays (`feedZoom`). At the largest step, rendered elements carry `zoom: 1.4`. **R/S**
+
+---
+
+## 4. Spacing
+
+| Item | Value | Src |
+|---|---|---|
+| Screen horizontal padding | 28px | R/S |
+| Content width at 428px | 372px (428 − 2×28) for full-width buttons, inputs, cards | R |
+| Footer CTA area | Primary button 372×90 at the bottom; stacked secondary actions below or above | R |
+| Full-screen modal padding | `124px 28px 32px` (reminder), `88px 28px 32px` (snooze), `96px 28px 32px` (taken) | S |
+| Bottom-sheet padding | `30px 28px 36px` (call confirm, action complete); `26px 28px 32px` (time picker); `26px 28px 34px` (Anna) | R/S |
+| Dialog padding | `30px 26px 24px`, max-width 360px, outer padding 28px | R/S |
+| Card padding | `18px 20px` (detail rows, med-added, schedule), `18px` (contact card), `24px 26px 20px` (time card), `26px` (next-dose card) | R |
+| Input padding | `0 22px` (forms), `0 20px` (profile) | R |
+| Option tile padding | `20px` (language, frequency), `18px` (intake), `16px 18px` (relationship rows) | S |
+| Bottom nav | Wrapper `10px 24px 24px`; bar padding `10px 8px`; tab padding `9px 0`, gap 5px | S |
+| Gaps | 5, 6, 8, 10, 12, 14, 16, 18, 22px (flex `gap`) | S |
+
+---
+
+## 5. Radius
+
+| Element | Radius | Src |
+|---|---|---|
+| Phone frame | 46px | R |
+| Primary buttons (90/88/86/80/78px) | 18px | R |
+| Outline buttons | 16px for 64–76px buttons; 18px for 76–84px buttons (Log In, Edit Contact, Add Another Contact) | R |
+| Inputs, select, option tiles, profile rows | 16px (inputs, tiles); 14px (profile input, language select, Skip button) | R |
+| Back button | 14px (46×46) | R |
+| Modal close button | 13px (44×44) | R |
+| Dose chips | 14px (onboarding, 55px tall); 12px (Edit Medication, 46–48px tall) | R |
+| Popular-medication chips, day pills, 12-hour toggle | 999px | R |
+| Time-of-day chips | 16px | R |
+| Cards | 18px (detail rows, info panel), 20px (contact, schedule, med-added), 22px (reminder time card), 26px (next-dose hero) | R |
+| Time tiles | 18px (detail time buttons), 15px (schedule tile) | R |
+| Icon chips | 14 / 20 / 22px | R |
+| Bottom-nav bar / tab | 24px / 16px | R |
+| Bottom sheets | 34px top corners | R |
+| Dialog | 26px | R |
+| Avatars, status circles | 50% | R |
+| Auth logo tile | 32px (112×112) | R |
+
+---
+
+## 6. Elevation
+
+| Use | Value | Src |
+|---|---|---|
+| Primary button | `0 12px 26px rgba(4,39,125,.22)`; Anna-sheet primary `0 10px 24px` | R |
+| Destructive button | `0 10px 24px rgba(186,26,26,.25)` | R |
+| Input / select / time card | `0 1px 2px rgba(0,0,0,.04)` | R |
+| Detail row card, schedule card | `0 4px 14px rgba(13,92,77,.05)` | R |
+| Contact / med-added card | `0 6px 18px rgba(13,92,77,.06)` | R |
+| Next-dose hero (navy) | `0 18px 38px rgba(4,39,125,.26)` | R |
+| Bottom nav | `0 12px 30px rgba(13,92,77,.1)` | R |
+| Dropdown | `0 8px 22px rgba(0,0,0,.08)` | R |
+| Dialog | `0 24px 60px rgba(8,30,24,.3)` | R |
+| Anna sheet | `0 -10px 40px rgba(8,16,40,.28)` | R |
+| History sheet | `0 -10px 40px rgba(8,30,24,.25)` | S |
+| Toasts | `0 14px 34px rgba(4,39,125,.18)`, Anna toast `.22` | S |
+| Status circles | Navy 96px: `0 12px 26px rgba(4,39,125,.28)`; teal 70px: `0 12px 26px rgba(13,92,77,.28)`; halo rings `0 0 0 5px #fff, 0 16–18px 36–40px rgba(…,.16)` | R |
+
+---
+
+## 7. Motion
+
+| Name | Definition | Use | Src |
+|---|---|---|---|
+| `cpFade` | opacity 0→1; `.2s` dialogs, `.25s` sheets, `.3s` full-screen modals | Scrims, modals | S |
+| `cpUp` | translateY(100%)→0, `.35s cubic-bezier(.2,.8,.2,1)` | Bottom sheets | S |
+| `cpPop` | scale .7→1.06→1, `.3s ease` | Dialogs, success checks | S |
+| `cpGlow` | inset navy glow pulse, `1.8s ease-in-out` infinite after `.3s` | Reminder modal background | S |
+| `cpPulse` | scale 1→1.9 + fade, `2.2s` infinite | Anna button halo, Meet Anna mic | S |
+| `cpRing` | scale .9→1.6 + fade | Call ripple | S |
+| `cpWave` | scaleY .35→1, `1s` infinite | Anna "speaking" bars (`#A3BBFF`) | S |
+| `cpToast` | translateY(14px)→0 + fade, `.3s` | Toasts and banners | S |
+| `cpDots` | dot opacity cycle | Loading dots | S |
+| `cpGlide`, `cpRoll`, `cpSway`, `cpDrift` | Welcome illustration loops | Welcome screen | S |
+| Track | `transform .42s cubic-bezier(.4,0,.2,1)` | Onboarding slide | S |
+| Small transitions | `transform .2s` (3 uses: carets / chevrons) | Dropdown carets | S |
+
+**Reduced motion.** `@media (prefers-reduced-motion: reduce)` turns off only `.cp-ride` and `.cp-wheel` (Welcome riders and wheels). `cpPulse`, `cpGlow`, `cpWave`, `cpRing`, `cpDrift` and `cpSway` keep running. **S**
+
+---
+
+## 8. Components
+
+All sizes are at 428px, text scale 1×. "Seen on" names the screen where the component was measured.
+
+### 8.1 Buttons
+
+| Variant | Size | Style | Label | Seen on | Src |
 |---|---|---|---|---|---|
-| Display heading | 32px | 700 | -0.5px | `#04277D` | Welcome title |
-| Screen title (h1) | 28–30px | 700 | -0.4px | `#04277D` | Step screens |
-| Popup title (h2) | 25px | 700/800 | -0.3px | `#04277D` | Bottom-sheet & dialog titles |
-| Detail name | 30px | 800 | -0.4px | `#04277D` | Med/contact detail header |
-| Big time value | 54–64px | 700/800 | -1 to -2px | `#04277D` | Time cards & picker; `font-variant-numeric: tabular-nums` |
-| Body | 18–20px | 500/600 | — | `#1E2E29` / `#4A5955` | `text-wrap: pretty` for paragraphs |
-| Popup body | 19px | 600 | — | `#3A6359` | line-height 1.5 |
-| Button label | 19–22px | 700 | — | varies | |
-| Field label | 16–17px | 600 | — | `#04277D` | |
-| Caption / overline | 13–15px | 600/700 | 0.4–0.6px, `UPPERCASE` | `#4A5955` / `#04277D` | section + status labels |
-| Min size | **14px** | — | — | — | never smaller (older-adult legibility) |
+| Primary CTA | 372×90 | bg navy, r18, primary shadow, trailing chevron | 22/700 white | Continue, Sign Up, Send Code, Next Step, Finish | R |
+| Primary, modal | 372×88 | as above | 23/700 | Take Med, Log as taken now | R |
+| Primary, modal footer | 372×90 | as above | 23/700 | Snooze 15 minutes, Close (snoozed) | R |
+| Primary, sheet / edit | 372×86 / 80 | as above | 21/700 | Save Changes, Save Time (86); Yes, call (80) | R |
+| Primary, dialog | 308×78 | as above | 20/700 | Log Out (dialog) | R |
+| Primary, Anna | 372×68 | r16, `0 10px 24px` shadow | 19/700 | Answer by voice | R |
+| Destructive, dialog | 308×78 | bg `#BA1A1A`, r18, destructive shadow | 20/700 white | Delete | R |
+| Outline, large | 372×84 / 80 / 76 | white, 2px navy, r18 | 20–21/700 navy | Log In (84), Edit Contact (80), Add Another Contact (76) | R |
+| Outline | 372×76 / 72 / 70 / 66 / 64 | white, 2px navy, r16 | 18–21/700 navy | Go Back (76), Snooze / No (72), Cancel (70), Add New Contact (66), Add New Medication (64) | R |
+| On-navy button | 320×74 | white, no border, r16 | 21/700 navy | Take Now (hero card) | R |
+| Emergency outline | 330×56 | white, 2px `#AF5F3E`, r14 | 17/700 `#AF5F3E` | Resolve with Anna | R |
+| Ghost | 372×60 | transparent, r14 | 19/700 `#5C6BB0` | Skip for now | R |
+| Ghost destructive | 372×66 | transparent, r16 | 18/700 `#BA1A1A` | Delete Contact | R |
+| Voice replay | 372×88 | `#E7ECFF`, 1.5px `#C7D0F5`, r18 | 19/700 navy + 15/600 `#5C6BB0` | Voice reminder playing | R |
+| Back | 46×46 | white, 1.5px `#DCE4E2`, r14, navy chevron | — | All step screens | R |
+| Modal close | 44×44 | `#EEF1EF`, 1.5px `#C9D5D1`, r13 | — | Reminder / missed | R |
+| Call (round) | 46×46 | bg emergency, 50% | — | Contact cards | R |
+| End call | 84×84 | `#E5453A`, 50% | — | Calling screen | R |
+| Anna button | 56×56 at top 65 / right 28 | navy mic disc + `cpPulse` halo (opacity .24) | `aria-label` localized | See §8.5 | R |
+| Day pill | 178×47 | white, 1.5px `#E2E7E5`, r999 | 15/700 navy | Previous / Next day | R |
+| Stepper | 88×64 | `#FAF9F7`, 1.5px `#DCE4E2`, r18 | chevron | Time picker | R |
 
-### Text-size accessibility scale
-Multipliers `[1, 1.13, 1.27, 1.4]` (4 steps), applied to whole screens/overlays. Prototype uses CSS
-`zoom`; in a real app use a font-scale context / Dynamic Type and ensure layouts reflow without clipping.
+**States.** **S**
 
----
+- No `:hover`, `:active` or `:focus` styles exist.
+- No button has a disabled style.
+- 20 inputs set `outline: none` and have no replacement focus indicator.
 
-## 3. Spacing & layout
+The earlier spec's "buttons darken / settle on press" is not implemented.
 
-- **Horizontal screen padding:** `28px` (forms/content), `24px` (history sheet).
-- **Top padding:** `62px` for screens with a back-button row; `80px` for success screens (back button
-  removed — keep balanced top breathing room).
-- **Footer (CTA) padding:** `14px 28px 30px`; stacked CTAs use `gap: 8–12px`.
-- **Common gaps:** 6 / 8 / 10 / 12 / 14 / 18 / 20 / 22 px (flex/grid `gap` — not margins).
-- **Bottom-sheet padding:** `30px 28px 36px`.
-- **Dialog (centered) padding:** `30px 26px 24px`, `max-width: 360px`.
-- **Card padding:** `16–20px`.
-- Layout uses **flex/grid with `gap`** throughout. Day pickers use `grid-template-columns: repeat(3,1fr)`.
+### 8.2 Inputs
 
----
+| Variant | Size | Style | Src |
+|---|---|---|---|
+| Text input (forms) | 372×72 | white, 1.5px `#DCE4E2`, r16, padding `0 22px`, text 20/500, shadow `0 1px 2px rgba(0,0,0,.04)` | R/S |
+| Text input (name, medication, dosage) | 372×74 | same; text 21/600 | R |
+| Text input (Edit Medication) | 372×70 | same; text 20/600 | R |
+| Text input (Profile) | 372×64 | r14, padding `0 20px`, text 19/500, no shadow | R |
+| Error | — | border `#BA1A1A`. Phone field also gets ring `0 0 0 3px rgba(211,47,47,.14)`. Error row: 16/600 `#BA1A1A`. | R |
+| Select (relationship) | 372×72 | like input; placeholder 20/500 `#BFC9C4`; caret rotates (`transform .2s`) | R |
+| Dropdown list | 372 wide | white, 1.5px `#DCE4E2`, r16, shadow `0 8px 22px rgba(0,0,0,.08)`; rows 60px, 19/500, 1px `#F0F2F0` dividers, check 20/700 navy | R |
+| Code input | 4 digits, numeric | not measured | A |
 
-## 4. Border radius
-| Element | Radius |
-|---|---|
-| Primary / large buttons | 18px |
-| Secondary buttons, inputs | 16px |
-| Cards | 18–22px |
-| Icon chips | 14px |
-| Bottom sheets (top corners) | 34px |
-| Centered dialog | 26px |
-| Pills / chips / avatars | 999px / 50% |
-| Time-picker stepper buttons | 18px |
-| AM/PM buttons | 14px |
+### 8.3 Selection controls
 
----
+| Control | Unselected | Selected | Src |
+|---|---|---|---|
+| Option tile (language 84px, frequency 72px, edit frequency 66px) | white, 2px `#DCE4E2`, r16 | `rgba(4,39,125,.05)`, 2px navy, check icon (opacity toggle) | R |
+| Intake tile (74px) | white, 2px `#E2E7E5`, r16 | `#E0E7FF`, 2px navy | R |
+| Dose chip (onboarding 55px, r14) | white, 1.5px `#DCE4E2`, 18/700 navy | navy fill, white text | R |
+| Dose chip (Edit Medication 46–48px, r12) | same, 16/700 | navy fill | R |
+| Popular-med chip (46px, padding `12px 20px`) | white, 1.5px `#DCE4E2`, r999, 17/600 navy | No selected style. Tapping fills the input; the chip looks the same. | R |
+| Time-of-day chip (57px, r16) | white, 1.5px `#DCE4E2`, 18/700 navy | `#E0E7FF`, 2px navy | R |
+| AM/PM | see §2.5 | see §2.5 | R |
+| 12-hour toggle | `#E0E7FF`, 1.5px `#C7D0F5`, r999, 15/700 navy, 115×41 | — | R |
+| Text-size buttons | four "A" buttons in Profile | not measured in detail | A |
 
-## 5. Shadows
-| Use | Value |
-|---|---|
-| Primary button | `0 12px 26px rgba(4,39,125,.22)` |
-| Destructive button | `0 10px 24px rgba(186,26,26,.25)` |
-| Card (soft) | `0 2px 8px rgba(13,92,77,.04)` |
-| Card (default) | `0 4px 14px rgba(13,92,77,.05)` |
-| Card (raised) | `0 6px 18px rgba(13,92,77,.06)` |
-| Input | `0 1px 2px rgba(0,0,0,.04)` |
-| Bottom sheet | `0 -10px 40px rgba(8,30,24,.x)` |
-| Centered dialog | `0 24px 60px rgba(8,30,24,.3)` |
-| Overlay scrim | `rgba(8,30,24,.5)` (sheets) / `.55` (dialogs) |
+### 8.4 Cards
 
----
+| Card | Size | Style | Src |
+|---|---|---|---|
+| Next-dose hero | 372×245 | navy, r26, padding 26, shadow `0 18px 38px rgba(4,39,125,.26)`. Icon tile 66×66 `rgba(255,255,255,.14)` r20. Name 26/700 white; detail 18/500 `#A9D7CC`; time 30/800 white. | R |
+| Schedule item | 372 wide | white, 1.5px `#E8ECEA`, r20, padding `18px 20px`, shadow `0 4px 14px rgba(13,92,77,.05)`. Time tile 54×54 `#F1F5F3` r15 (18/800 + 12/700). Missed chip 14/700 `#AF5F3E`. | R |
+| Reminder time card | 372×156 | white, 1.5px `#DCE4E2`, r22, padding `24px 26px 20px`. Overline 15/700 navy; time 60/700. | R |
+| Detail row card | 372×86 | white, 1.5px `#E8ECEA`, r18, padding `18px 20px`. Overline 14/700; value 20/600. | R |
+| Contact card | 372×102 (saved) / 140 (manage) | white, 1.5px `#E8ECEA`, r20, padding 18, shadow `0 6px 18px rgba(13,92,77,.06)`. Avatar 56 `#E0E8FF`; name 20–21/700; call button 46. | R |
+| Medication-added card | 372×106 | as contact card, padding `18px 20px`; icon chip 52 `#E6F0EC` r14 | R |
+| Profile row | 372×74 | white, 1.5px `#E2E7E5`, r16, padding `0 18px`, 19/700 navy (renders in Arial) | R |
 
-## 6. Motion
-Keyframes (durations & easings are exact):
+### 8.5 Navigation
 
-| Name | Definition | Use |
+| Item | Spec | Src |
 |---|---|---|
-| `cpFade` | opacity 0→1, `.2–.25s ease` | overlay scrims |
-| `cpUp` | translateY(100%)→0, `.35s cubic-bezier(.2,.8,.2,1)` | bottom sheets |
-| `cpPop` | scale .7→1.06→1, `.3–.45s ease` | dialogs, success checks |
-| `cpPulse` | scale 1→1.9 + fade, `2.2–2.8s` infinite | Anna mic halo, splash |
-| `cpRing` | scale .9→1.6 + fade, `1.8s` infinite | call ripple |
-| `cpGlide` | translateY 0→-6→0, `3.8s ease-in-out` infinite | Welcome riders bob |
-| `cpRoll` | rotate 0→360°, `3.2s linear` infinite | Welcome skateboard wheels |
-| `cpSway` | rotate 0→7°→0, `~3.4s ease-in-out` infinite | Welcome hair sway |
-| `cpDrift` | translateX + fade, `2.7s ease-in-out` infinite (staggered) | Welcome speed lines |
-| Screen track | `transform .42s cubic-bezier(.4,0,.2,1)` | onboarding horizontal slide |
+| Bottom nav | Bar 380×86, white, 1.5px `#EAEEEC`, r24, padding `10px 8px`, shadow `0 12px 30px rgba(13,92,77,.1)`. Wrapper gradient `#FAF9F7` 82% → transparent. | R/S |
+| Nav tab | 121×64, r16, padding `9px 0`, gap 5. Active bg `rgba(4,39,125,.10)`, label navy; inactive transparent, `#9AA8A3`. Labels 13/700. | R |
+| Anna button | See §8.1. Shown when `showAnna` is true on: onboarding step 7 onwards (Emergency Contact and later), the Log In flow, and all app tabs except Call. Meet Anna (step 6) uses its own centred 132px mic button instead. | S (rule `annaBtnVisible`), R |
+| Back button | See §8.1 | R |
 
-**Reduced motion:** `@media (prefers-reduced-motion: reduce) { .cp-ride, .cp-wheel { animation: none !important } }`.
-Wheels/hair use `transform-box: fill-box; transform-origin: center` (SVG).
+### 8.6 Overlays
 
----
-
-## 7. Component recipes
-
-### Primary button
-`height: 90px` (CTA) or `80px` (in-overlay); `bg #04277D`; text `#fff` 21–22px/700; radius 18px;
-`box-shadow: 0 12px 26px rgba(4,39,125,.22)`; centered flex, `gap:12px` with optional trailing chevron.
-
-### Secondary (outline) button
-`height: 66–80px`; `bg #fff`; `2px solid #04277D`; text `#04277D` 18–20px/700; radius 16px.
-
-### Tertiary / ghost button
-Transparent bg, no border; text `#5C6BB0` 700 (e.g. "Skip for now") or `#BA1A1A` 700 (Delete actions);
-`height: 60–66px`.
-
-### Destructive button (in confirm dialog)
-`bg #BA1A1A`; text `#fff`; `height: 78px`; radius 18px; `box-shadow 0 10px 24px rgba(186,26,26,.25)`;
-trash icon leading.
-
-### Input field
-`height: 72–74px`; `bg #fff`; `1.5px solid #DCE4E2` (error → `#BA1A1A`); radius 16px;
-padding `16–22px`; text 19px/500 `#1E2E29`; `box-shadow 0 1px 2px rgba(0,0,0,.04)`; outline none.
-Error row: 18px circle-alert icon + `#BA1A1A` 16px/600 message, `cpFade` in.
-
-### Card (list item)
-`bg #fff`; `1.5px solid #E8ECEA`; radius 18–22px; padding 16–20px; raised shadow; left icon chip
-(48–56px, `bg #E6F0EC`/`#E0E8FF`, radius 14px or 50%) + text column + trailing chevron `#9AA8A3`.
-
-### Medication icon (centered capsule) — **critical**
-24×24 viewBox. Pill must be perfectly centered & rotated about the **viewBox center**:
-```svg
-<rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="#04277D"/>
-```
-Never pivot rotation about a corner. The container is flex `align-items:center; justify-content:center`.
-
-### Bottom-sheet popup (the canonical confirmation popup)
-Scrim `rgba(8,30,24,.5)` + `cpFade`; sheet anchored bottom: `bg #E3F2EE`; `border-radius 34px 34px 0 0`;
-**padding `30px 28px 36px`**; `cpUp` enter; column, centered, `gap:12px`. Contents: 84px circle
-(`rgba(4,39,125,.10)`) wrapping 60px `#04277D` circle + white icon → h2 title 25px/700 `#04277D` →
-body 19px/600 `#3A6359` → 80px primary "Close"/action button.
-**All "completed-action" confirmations (Medication Deleted, Contact Deleted, Medication Saved, Contact
-Saved, Reminder Snoozed) share these exact dimensions.**
-
-### Centered confirm dialog (destructive)
-Scrim `rgba(8,30,24,.55)`; centered card `max-width 360px`; `bg #fff`; radius 26px; padding
-`30px 26px 24px`; `cpPop`. 72px `#FBE9E9` circle + `#BA1A1A` trash icon → h2 25px → body 18px `#4A5955`
-→ stacked `#BA1A1A` Delete (78px) + outline Cancel (70px).
-
-### Time picker (single shared control)
-White bottom sheet (radius 34px top, padding `26px 28px 32px`). Grab-handle. Header: title +
-12h/24h toggle pill (`bg #E0E7FF`, `1.5px #C7D0F5`, clock icon). Two stepper columns (hour, minute) —
-each `88×64px` up/down buttons (`bg #FAF9F7`, `1.5px #DCE4E2`, chevron) around a `64px/800` value with
-`tabular-nums`; ":" separator. AM/PM segmented control (see §1, hidden in 24h mode, check when selected,
-`aria-pressed`). 80px primary "Save Time" + 64px outline "Cancel". Minute step = 5.
-
-### Schedule / day chips (primary selection — keep prominent)
-Selected: `bg #E0E7FF`, text `#04277D`, `2px #04277D` border, leading check. Unselected: `bg #fff`,
-`1.5px #DCE4E2`. Min height 62px.
-
-### Bottom nav (app phase)
-Tab buttons, equal flex; active tab pill `bg` accent; pill / phone / profile icons; label below.
+| Overlay | Type | Spec | Src |
+|---|---|---|---|
+| Reminder, Missed | Full screen | `#E3F2EE` + `cpGlow`. Close 44×44 at top 70 / right 28. 140px halo circle. Title 34/800. "How to take it" panel. Voice replay button. Primary 88 + outline 72. | R/S |
+| Taken, Snooze confirm, Snoozed | Full screen | `#E3F2EE`. 200px halo circle. Title 32–34. Body 20–22. Primary 90 (+ outline 76 on snooze confirm). | R |
+| Call confirm | Bottom sheet | `#E3F2EE`, r34 top, padding `30px 28px 36px`, gap 10. 84px icon circle `rgba(4,39,125,.10)`. Title 25/700. Primary 80 + outline 72. | R |
+| Action complete | Bottom sheet | `#E3F2EE`, same padding, gap 12. Shared by "Medication Saved", "Contact Saved" and similar. | S |
+| Anna | Bottom sheet | `#E0E7FF`, r34 top, padding `26px 28px 34px`, gap 16, max-height 86%, blur scrim. Answer-by-voice 68px; action buttons 64px outline. | R |
+| Time picker | Bottom sheet | White, r34 top, padding `26px 28px 32px`. Grab handle 44×5 `#DCE4E2` r3. Stepper 88×64. Digits 64/800. Save 86 + Cancel 64. | R |
+| Medication history | Bottom sheet | White, r34 top, max-height 780px | S |
+| Contact picker | Bottom sheet | `#FAF9F7`, r34 top, max-height 560px | S |
+| Delete / Log out | Centered dialog | White, r26, max-width 360, padding `30px 26px 24px`. Icon circle 72 (`#FBE9E9` delete, `rgba(4,39,125,.10)` logout). Title 25/800. Primary or destructive 78 + outline 70. | R |
+| Medication / contact details | Full screen | `#FAF9F7`, header padding `70px 28px 6px` | S |
+| Toasts / banners | Floating | Mint or lavender, 1.5px border, r18, padding `16px 18px`, `cpToast` | S |
 
 ---
 
-## 8. Accessibility checklist
-- Hit targets ≥ 44px; primary CTAs 80–90px.
-- Body ≥ 18px, never below 14px; supports the 4-step font scale to 1.4×.
-- High-contrast mode darkens secondary text to `#2C3531`.
-- Selection states never rely on color alone — also use **border weight changes + check icons +
-  `aria-pressed`** (see AM/PM and chips).
-- Interactive non-button elements (tappable time cards) use `role="button"`, `tabindex="0"`, `aria-label`.
-- Decorative motion disabled under `prefers-reduced-motion`.
-- Illustration has `role="img"` + descriptive `aria-label`.
+## 9. Accessibility
+
+| Item | Status | Src |
+|---|---|---|
+| Touch targets | Smallest interactive targets are 44×44 (modal close) and 46×46 (back, call). Medication Details' Edit and Delete buttons render at 46px and 37px tall (see §10). | R |
+| Contrast | High-contrast secondary text `#2C3531` is the default | R |
+| Selection | Option tiles combine colour, 2px border and a check icon. Chips combine fill and colour. AM/PM uses `aria-pressed`. | R/S |
+| Focus | No visible focus style (`outline:none` on inputs, no `:focus` rules) | S |
+| Screen-reader labels | 31 static `aria-label`s are English only. Anna button and some others are localized. | S |
+| Reduced motion | Partial (see §7) | S |
+| Languages | English, German, Russian (395 strings each) | R/S |
+
+---
+
+## 10. Known inconsistencies in the app (not fixed)
+
+These are present in `index.html` today. They need your decision before anything in the app is changed.
+
+1. **Fonts.** 42 `<button>` elements set no `font-family`, so their labels fall back to the browser's button font (Arial in Chromium) instead of Inter. Affected: language tiles, frequency and intake tiles, select value, profile rows, language select, bottom-nav labels.
+2. **Medication Details buttons are compressed.** They are declared 80px (Edit) and 66px (Delete), but render at 46px and 37px when the details content is tall. The same buttons on Contact Details render at full size.
+3. **Text below 14px.** Bottom-nav labels (13px), the relationship overline on the contact card (13px), and AM/PM in the schedule tile (12px).
+4. **No focus, hover, pressed or disabled states.**
+5. **Reduced motion covers only the Welcome illustration.**
+6. **Not responsive.** A fixed 428px frame is clipped on phones narrower than about 442px.
+7. **Props vs fallbacks.** `emergencyColor` and `highContrast` defaults (`#AF5F3E`, true) differ from the code fallbacks (`#E07B4F`, false).
+8. **Language after reload.** The app always starts in English, although the chosen language is saved to `localStorage`.
+9. **Onboarding track width.** It is declared 6420px wide for 16 screens of 428px (6848px). The last screen overflows the container, but still renders.
+
+## 11. Changes from the previous spec (handoff)
+
+| Topic | Previous spec | App (verified) |
+|---|---|---|
+| Emergency colour | `#E07B4F` | `#AF5F3E` (default prop) |
+| Secondary text | `#4A5955` default | `#2C3531` (high contrast on by default) |
+| Reminder / missed / snooze / taken | Mint bottom sheets | Full-screen mint modals |
+| Anna | Inline "Speak to Anna" tiles, floating entry | One top-right Anna button; lavender Anna sheet with voice input; Meet Anna screen |
+| Languages | EN, ES, DE, FR, RU | EN, DE, RU |
+| Minimum text size | 14px | 12px and 13px exist (see §10) |
+| Button press feedback | "darken / settle" | None |
+| Reduced motion | All decorative motion | Welcome illustration only |
+| Input text | 19px/500 | 20/500, 21/600 or 19/500 depending on screen |
+| Outline button radius | 16px | 16px or 18px depending on height |
+| New tokens | — | `#234B43`, `#2F5249`, `#243A6E`, `#A9D7CC`, `#E7ECFF`, `#BFC9C4`, `#EEF1EF` / `#C9D5D1`, `#CFE0DA`, `#EAEEEC`, `#E5453A` |
