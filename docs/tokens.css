@@ -1,0 +1,163 @@
+/* CarePill — Design Tokens (HTML/CSS)
+   Drop into a global stylesheet. Values are authoritative; see DESIGN_SYSTEM.md. */
+
+:root {
+  /* ---- Brand ---- */
+  --cp-navy: #04277D;          /* primary */
+  --cp-navy-soft: #5C6BB0;
+  --cp-navy-ink: #2C3E73;
+  --cp-teal: #0D5C4D;          /* secondary / success */
+  --cp-teal-deep: #0A4A3E;
+
+  /* ---- Surfaces ---- */
+  --cp-bg: #FAF9F7;            /* app background */
+  --cp-surface: #FFFFFF;       /* cards / inputs */
+  --cp-mint: #E3F2EE;          /* splash + bottom-sheet popups */
+  --cp-mint-2: #E6F0EC;        /* icon chips */
+  --cp-mint-3: #F1F5F3;        /* timeline tiles */
+  --cp-lavender: #E0E7FF;      /* Anna / accents */
+  --cp-lavender-2: #E0E8FF;    /* contact avatar */
+  --cp-lavender-border: #C7D0F5;
+
+  /* ---- Text ---- */
+  --cp-text: #1E2E29;          /* primary body */
+  --cp-heading: #04277D;       /* headings on brand */
+  --cp-text-secondary: #4A5955;
+  --cp-text-secondary-hc: #2C3531;   /* high-contrast mode */
+  --cp-text-popup: #3A6359;    /* popup body */
+  --cp-text-muted-indigo: #5C6BB0;
+
+  /* ---- AM/PM (secondary control) ---- */
+  --cp-ampm-on-bg: #EAEEF7;
+  --cp-ampm-on-fg: #3E4A66;
+  --cp-ampm-on-border: #AEB9D6;
+  --cp-ampm-off-bg: #F5F7FB;
+  --cp-ampm-off-fg: #707B95;
+  --cp-ampm-off-border: #DCE4E2;
+
+  /* ---- Destructive / emergency ---- */
+  --cp-danger: #BA1A1A;
+  --cp-danger-surface: #FBE9E9;
+  --cp-call-end: #E5453A;
+  --cp-emergency: #E07B4F;     /* prop: emergencyColor */
+
+  /* ---- Borders ---- */
+  --cp-border: #DCE4E2;
+  --cp-border-2: #E8ECEA;
+  --cp-border-3: #E2E7E5;
+  --cp-divider: #EEF1EF;
+
+  /* ---- Status ---- */
+  --cp-taken-bg: #E6F4EF;
+  --cp-taken-fg: #0D5C4D;
+
+  /* ---- Radius ---- */
+  --cp-r-btn: 18px;
+  --cp-r-btn-sm: 16px;
+  --cp-r-card: 20px;
+  --cp-r-chip: 14px;
+  --cp-r-sheet: 34px;
+  --cp-r-dialog: 26px;
+  --cp-r-pill: 999px;
+
+  /* ---- Shadows ---- */
+  --cp-sh-primary: 0 12px 26px rgba(4,39,125,.22);
+  --cp-sh-danger: 0 10px 24px rgba(186,26,26,.25);
+  --cp-sh-card-soft: 0 2px 8px rgba(13,92,77,.04);
+  --cp-sh-card: 0 4px 14px rgba(13,92,77,.05);
+  --cp-sh-card-raised: 0 6px 18px rgba(13,92,77,.06);
+  --cp-sh-input: 0 1px 2px rgba(0,0,0,.04);
+  --cp-sh-sheet: 0 -10px 40px rgba(8,30,24,.18);
+  --cp-sh-dialog: 0 24px 60px rgba(8,30,24,.3);
+
+  /* ---- Scrims ---- */
+  --cp-scrim-sheet: rgba(8,30,24,.5);
+  --cp-scrim-dialog: rgba(8,30,24,.55);
+
+  /* ---- Type ---- */
+  --cp-font: "Inter", -apple-system, sans-serif;
+
+  /* ---- Font-scale accessibility (multiply sizes by this) ---- */
+  --cp-font-scale: 1;          /* steps: 1, 1.13, 1.27, 1.4 */
+}
+
+/* ===== Motion ===== */
+@keyframes cpFade { 0% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes cpUp   { 0% { transform: translateY(100%) } 100% { transform: translateY(0) } }
+@keyframes cpPop  { 0% { transform: scale(.7); opacity: 0 } 60% { transform: scale(1.06) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes cpGlide{ 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes cpRoll { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+@keyframes cpSway { 0%,100% { transform: rotate(0deg) } 50% { transform: rotate(7deg) } }
+@keyframes cpDrift{ 0% { opacity: 0; transform: translateX(10px) } 35% { opacity: .5 } 100% { opacity: 0; transform: translateX(-32px) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-ride, .cp-wheel { animation: none !important; }
+}
+
+/* ===== Component recipes ===== */
+
+.cp-btn-primary {
+  height: 90px; border: none; border-radius: var(--cp-r-btn);
+  background: var(--cp-navy); color: #fff;
+  font: 700 22px/1 var(--cp-font);
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  cursor: pointer; box-shadow: var(--cp-sh-primary);
+}
+.cp-btn-secondary {
+  height: 72px; border-radius: var(--cp-r-btn-sm);
+  border: 2px solid var(--cp-navy); background: #fff; color: var(--cp-navy);
+  font: 700 20px/1 var(--cp-font); cursor: pointer;
+}
+.cp-btn-ghost {
+  height: 64px; border: none; background: transparent;
+  color: var(--cp-text-muted-indigo); font: 700 19px/1 var(--cp-font); cursor: pointer;
+}
+.cp-btn-danger { /* used inside confirm dialog */
+  height: 78px; border: none; border-radius: var(--cp-r-btn);
+  background: var(--cp-danger); color: #fff; font: 700 20px/1 var(--cp-font);
+  box-shadow: var(--cp-sh-danger); cursor: pointer;
+}
+.cp-input {
+  height: 74px; width: 100%; border-radius: var(--cp-r-btn-sm);
+  border: 1.5px solid var(--cp-border); background: #fff; padding: 0 22px;
+  font: 500 19px/1 var(--cp-font); color: var(--cp-text);
+  box-shadow: var(--cp-sh-input); outline: none;
+}
+.cp-input--error { border-color: var(--cp-danger); }
+
+.cp-card {
+  background: #fff; border: 1.5px solid var(--cp-border-2);
+  border-radius: var(--cp-r-card); padding: 18px 20px; box-shadow: var(--cp-sh-card-raised);
+  display: flex; align-items: center; gap: 16px;
+}
+.cp-icon-chip {
+  width: 52px; height: 52px; flex: none; border-radius: var(--cp-r-chip);
+  background: var(--cp-mint-2); display: flex; align-items: center; justify-content: center;
+}
+
+/* Bottom-sheet popup (canonical confirmation) */
+.cp-sheet-scrim {
+  position: absolute; inset: 0; z-index: 97; background: var(--cp-scrim-sheet);
+  display: flex; flex-direction: column; justify-content: flex-end; animation: cpFade .25s ease;
+}
+.cp-sheet {
+  background: var(--cp-mint); border-radius: var(--cp-r-sheet) var(--cp-r-sheet) 0 0;
+  padding: 30px 28px 36px; animation: cpUp .35s cubic-bezier(.2,.8,.2,1);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.cp-sheet__title { margin: 0; font: 700 25px/1.1 var(--cp-font); color: var(--cp-heading); text-align: center; }
+.cp-sheet__body  { margin: 0; font: 600 19px/1.5 var(--cp-font); color: var(--cp-text-popup); text-align: center; text-wrap: pretty; }
+
+/* Centered destructive dialog */
+.cp-dialog-scrim {
+  position: absolute; inset: 0; z-index: 99; background: var(--cp-scrim-dialog);
+  display: flex; align-items: center; justify-content: center; padding: 28px; animation: cpFade .2s ease;
+}
+.cp-dialog {
+  width: 100%; max-width: 360px; background: #fff; border-radius: var(--cp-r-dialog);
+  padding: 30px 26px 24px; box-shadow: var(--cp-sh-dialog); animation: cpPop .3s ease;
+}
+
+/* The medication capsule icon — pivot rotation about the viewBox CENTER (do not use a corner). */
+/* <svg viewBox="0 0 24 24"><rect x="5.5" y="9" width="13" height="6" rx="3"
+       transform="rotate(-45 12 12)" fill="#04277D"/></svg> */
