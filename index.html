@@ -29,6 +29,9 @@
   @keyframes cpPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
   @keyframes cpUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
   @keyframes cpFade{0%{opacity:0}100%{opacity:1}}
+  @keyframes cpFadeOut{0%{opacity:1}100%{opacity:0}}
+  @keyframes cpDown{0%{transform:translateY(0)}100%{transform:translateY(100%)}}
+  @keyframes cpScrimOut{100%{background-color:transparent;backdrop-filter:none}}
   @keyframes cpDots{0%,80%,100%{opacity:.25}40%{opacity:1}}
   @keyframes cpWave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
   @keyframes cpRing{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.6);opacity:0}}
@@ -46,6 +49,18 @@
   .cp-on-navy :focus-visible{outline-color:#FFFFFF !important}
   /* Pressed feedback: instant darkening, no animation. */
   button:not(:disabled):active,[role="button"]:active{filter:brightness(.85)}
+  /* Closing: windows leave the way they came. Sheets slide down, full screens and toasts fade out. */
+  .cp-leaving{pointer-events:none !important;animation:cpFadeOut .25s ease forwards !important}
+  .cp-leaving.cp-has-sheet{animation:cpScrimOut .3s ease forwards !important}
+  .cp-leaving .cp-sheet{animation:cpDown .3s cubic-bezier(.4,0,1,1) forwards !important}
+  /* Reduced motion (system setting): no loops, no slides; windows only fade. */
+  @media (prefers-reduced-motion: reduce){
+    [data-cp-frame] *{animation-iteration-count:1 !important}
+    [data-cp-frame] [style*="infinite"]{animation:none !important}
+    [data-cp-frame] [style*="cpUp"]{animation:cpFade .2s ease !important}
+    .cp-leaving .cp-sheet{animation:cpFadeOut .2s ease forwards !important}
+    [data-cp-frame] [style*="cpPop"]{animation:cpFade .2s ease !important}
+  }
 </style>
 </helmet>
 <div style="min-height:100vh;width:100%;background:#e7e5df;display:flex;align-items:center;justify-content:center;padding:40px 20px;box-sizing:border-box;font-family:Inter,-apple-system,sans-serif">
@@ -315,7 +330,7 @@
                 <div onClick="{{ c.onOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;cursor:pointer">
                   <div style="width:56px;height:56px;border-radius:50%;background:#E0E8FF;display:flex;align-items:center;justify-content:center;flex:none;font-size:21px;font-weight:700;color:#04277D">{{ c.initials }}</div>
                   <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
-                    <span style="font-size:13px;font-weight:600;color:{{ secColor }};text-transform:uppercase;letter-spacing:.4px">{{ c.rel }}</span>
+                    <span style="font-size:14px;font-weight:600;color:{{ secColor }};text-transform:uppercase;letter-spacing:.4px">{{ c.rel }}</span>
                     <span style="font-size:20px;font-weight:700;color:#1E2E29">{{ c.name }}</span>
                     <span style="font-size:17px;font-weight:500;color:{{ secColor }}">{{ c.phone }}</span>
                   </div>
@@ -528,7 +543,7 @@
                   <sc-for list="{{ timeline }}" as="d" hint-placeholder-count="2">
                     <div style="background:#fff;border:1.5px solid #E8ECEA;border-radius:20px;padding:18px 20px;box-shadow:0 4px 14px rgba(13,92,77,.05);display:flex;flex-direction:column;gap:14px">
                       <div onClick="{{ d.onOpen }}" role="button" tabindex="0" style="display:flex;align-items:center;gap:16px;cursor:pointer">
-                        <div style="width:54px;height:54px;border-radius:15px;background:#F1F5F3;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none"><span style="font-size:18px;font-weight:800;color:#04277D;line-height:1">{{ d.time }}</span><span style="font-size:12px;font-weight:700;color:{{ secColor }}">{{ d.period }}</span></div>
+                        <div style="width:54px;height:54px;border-radius:15px;background:#F1F5F3;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none"><span style="font-size:18px;font-weight:800;color:#04277D;line-height:1">{{ d.time }}</span><span style="font-size:14px;font-weight:700;color:{{ secColor }}">{{ d.period }}</span></div>
                         <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="font-size:20px;font-weight:700;color:#1E2E29">{{ d.name }}</span><span style="font-size:16px;font-weight:500;color:{{ secColor }}">{{ d.dose }}</span></div>
                         <span style="padding:8px 14px;border-radius:999px;background:{{ d.chipBg }};color:{{ d.chipFg }};font-size:14px;font-weight:700;flex:none">{{ d.chipLabel }}</span>
                       </div>
@@ -606,9 +621,9 @@
 
                 <div style="display:flex;flex-direction:column;gap:18px">
                   <span style="font-size:15px;font-weight:700;color:{{ secColor }};text-transform:uppercase;letter-spacing:.5px">{{ t.sound }}</span>
-                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.systemVolume }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ systemVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ systemVolVal }}" onInput="{{ on.systemVol }}" style="width:100%;accent-color:#04277D;height:8px"/></div>
-                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.reminderChime }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ chimeVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ chimeVolVal }}" onInput="{{ on.chimeVol }}" style="width:100%;accent-color:#04277D;height:8px"/></div>
-                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.annasVoice }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ annaVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ annaVolVal }}" onInput="{{ on.annaVol }}" style="width:100%;accent-color:#04277D;height:8px"/></div>
+                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.systemVolume }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ systemVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ systemVolVal }}" onInput="{{ on.systemVol }}" style="width:100%;accent-color:#04277D;height:44px;margin:-16px 0;cursor:pointer"/></div>
+                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.reminderChime }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ chimeVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ chimeVolVal }}" onInput="{{ on.chimeVol }}" style="width:100%;accent-color:#04277D;height:44px;margin:-16px 0;cursor:pointer"/></div>
+                  <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:17px;font-weight:600;color:#04277D">{{ t.annasVoice }}</span><span style="font-size:17px;font-weight:700;color:{{ accent }}">{{ annaVolVal }}%</span></div><input type="range" min="0" max="100" value="{{ annaVolVal }}" onInput="{{ on.annaVol }}" style="width:100%;accent-color:#04277D;height:44px;margin:-16px 0;cursor:pointer"/></div>
                 </div>
 
                 <div style="display:flex;flex-direction:column;gap:14px">
@@ -634,7 +649,7 @@
                   <sc-if value="{{ n.isPill }}" hint-placeholder-val="{{ true }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="{{ n.color }}"/><rect x="4" y="9" width="5.5" height="7" rx="3.5" transform="rotate(-45 4 9)" fill="{{ n.color }}" opacity="0.45"/></svg></sc-if>
                   <sc-if value="{{ n.isCallIcon }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="{{ n.color }}"><path d="M6.5 3h3l1.5 4.5-2 1.5a11 11 0 0 0 4.5 4.5l1.5-2 4.5 1.5v3c0 1.1-.9 2-2 2A15 15 0 0 1 4.5 5c0-1.1.9-2 2-2z"/></svg></sc-if>
                   <sc-if value="{{ n.isProfileIcon }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="{{ n.color }}"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6" fill="{{ n.color }}"/></svg></sc-if>
-                  <span style="font-size:13px;font-weight:700;color:{{ n.color }}">{{ n.label }}</span>
+                  <span style="font-size:14px;font-weight:700;color:{{ n.color }}">{{ n.label }}</span>
                 </button>
               </sc-for>
             </div>
@@ -742,7 +757,7 @@
             </span>
             <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
               <span style="font-size:19px;font-weight:700;color:#04277D">{{ t.voiceReminderTitle }}</span>
-              <span style="font-size:15px;font-weight:600;color:#5C6BB0">{{ t.voiceReminderHint }}</span>
+              <span style="font-size:15px;font-weight:600;color:#5262AA">{{ t.voiceReminderHint }}</span>
             </span>
           </button>
           <div style="flex:1 0 16px"></div>
@@ -771,7 +786,7 @@
         <div role="dialog" aria-modal="true" aria-label="{{ rmName }}" style="position:absolute;inset:0;z-index:90;background:#E3F2EE;display:flex;flex-direction:column;align-items:center;padding:124px 28px 32px;box-sizing:border-box;overflow-y:auto;animation:cpFade .3s ease,cpGlow 1.8s ease-in-out .3s infinite;zoom:{{ feedZoom }}">
           <button onClick="{{ dismissReminder }}" aria-label="{{ t.close }}" style="position:absolute;top:70px;right:28px;width:44px;height:44px;border-radius:13px;border:1.5px solid #C9D5D1;background:#EEF1EF;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#04277D" stroke-width="2.6" stroke-linecap="round"/></svg></button>
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
-            <span style="font-size:15px;font-weight:700;color:#AF5F3E;text-transform:uppercase;letter-spacing:.6px">{{ t.missedCheckin }}</span>
+            <span style="font-size:15px;font-weight:700;color:#9C5537;text-transform:uppercase;letter-spacing:.6px">{{ t.missedCheckin }}</span>
             <div aria-hidden="true" style="position:relative;width:140px;height:140px;border-radius:50%;background:rgba(4,39,125,.10);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #fff,0 16px 36px rgba(4,39,125,.16);margin:4px 0 6px">
               <div style="width:96px;height:96px;border-radius:50%;background:#04277D;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px rgba(4,39,125,.28);animation:cpPop .45s ease"><svg width="46" height="46" viewBox="0 0 24 24" fill="none"><rect x="5.5" y="9" width="13" height="6" rx="3" transform="rotate(-45 12 12)" fill="#fff"/></svg></div>
             </div>
@@ -800,7 +815,7 @@
             </span>
             <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
               <span style="font-size:19px;font-weight:700;color:#04277D">{{ t.voiceReminderTitle }}</span>
-              <span style="font-size:15px;font-weight:600;color:#5C6BB0">{{ t.voiceReminderHint }}</span>
+              <span style="font-size:15px;font-weight:600;color:#5262AA">{{ t.voiceReminderHint }}</span>
             </span>
           </button>
           <div style="flex:1 0 16px"></div>
@@ -813,7 +828,7 @@
       <sc-if value="{{ overlayAnna }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ closeOverlay }}" style="position:absolute;inset:0;z-index:92;background:rgba(8,16,40,.5);backdrop-filter:blur(3px);display:flex;flex-direction:column;justify-content:flex-end;animation:cpFade .25s ease">
           <div onClick="{{ tpStop }}" role="dialog" aria-label="{{ t.annaBtnLabel }}" style="background:#E0E7FF;border-radius:34px 34px 0 0;padding:26px 28px 34px;display:flex;flex-direction:column;align-items:center;gap:16px;animation:cpUp .35s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(8,16,40,.28);max-height:86%;overflow-y:auto;box-sizing:border-box;zoom:{{ feedZoom }}">
-            <div style="display:flex;align-items:center;gap:14px;align-self:stretch"><button onClick="{{ repeatAnna }}" aria-label="{{ t.annaRepeatLabel }}" title="{{ t.annaRepeatLabel }}" style="position:relative;width:56px;height:56px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:none;padding:0;cursor:pointer"><span style="position:absolute;inset:0;border-radius:50%;background:#04277D;opacity:.22;animation:cpPulse 2.2s ease-out infinite"></span><span style="position:relative;width:56px;height:56px;border-radius:50%;background:#04277D;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="#fff"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M12 17.5v3.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span></button><div style="display:flex;flex-direction:column"><span style="font-size:21px;font-weight:700;color:#04277D">{{ t.annaName }}</span><span style="font-size:15px;font-weight:600;color:#5C6BB0">{{ t.annaRepeatLabel }}</span></div></div>
+            <div style="display:flex;align-items:center;gap:14px;align-self:stretch"><button onClick="{{ repeatAnna }}" aria-label="{{ t.annaRepeatLabel }}" title="{{ t.annaRepeatLabel }}" style="position:relative;width:56px;height:56px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:none;padding:0;cursor:pointer"><span style="position:absolute;inset:0;border-radius:50%;background:#04277D;opacity:.22;animation:cpPulse 2.2s ease-out infinite"></span><span style="position:relative;width:56px;height:56px;border-radius:50%;background:#04277D;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="#fff"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M12 17.5v3.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span></button><div style="display:flex;flex-direction:column"><span style="font-size:21px;font-weight:700;color:#04277D">{{ t.annaName }}</span><span style="font-size:15px;font-weight:600;color:#5262AA">{{ t.annaRepeatLabel }}</span></div></div>
             <p style="margin:4px 0 0;max-width:350px;text-align:center;font-size:24px;line-height:1.45;color:#04277D;font-weight:700;text-wrap:pretty">{{ annaPrompt }}</p>
             <sc-if value="{{ hasAnnaInstr }}" hint-placeholder-val="{{ true }}"><p style="margin:0;max-width:350px;text-align:center;font-size:19px;line-height:1.5;color:#243A6E;font-weight:600;text-wrap:pretty">{{ annaInstr }}</p></sc-if>
             <sc-if value="{{ srListening }}" hint-placeholder-val="{{ false }}">
@@ -1055,7 +1070,7 @@
             <div style="width:44px;height:5px;border-radius:3px;background:#DCE4E2;margin:0 auto 18px"></div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px">
               <span style="font-size:22px;font-weight:800;color:#04277D;letter-spacing:-.3px">{{ tpTitle }}</span>
-              <button onClick="{{ tpToggleFmt }}" aria-label="Toggle 12 or 24 hour format" style="display:flex;align-items:center;gap:8px;border:1.5px solid #C7D0F5;background:#E0E7FF;border-radius:999px;padding:10px 16px;font-family:Inter,sans-serif;font-size:15px;font-weight:700;color:#04277D;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#04277D" stroke-width="2"/><path d="M12 7.5V12l3 2" stroke="#04277D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ tpFmtLabel }}</button>
+              <button onClick="{{ tpToggleFmt }}" aria-label="Toggle 12 or 24 hour format" style="min-height:48px;display:flex;align-items:center;gap:8px;border:1.5px solid #C7D0F5;background:#E0E7FF;border-radius:999px;padding:10px 16px;font-family:Inter,sans-serif;font-size:15px;font-weight:700;color:#04277D;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#04277D" stroke-width="2"/><path d="M12 7.5V12l3 2" stroke="#04277D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ tpFmtLabel }}</button>
             </div>
             <p style="margin:0 0 18px;font-size:16px;line-height:1.4;color:{{ secColor }}">{{ t.tpInstr }}</p>
             <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 22px">
@@ -1243,7 +1258,7 @@
             </span>
             <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
               <span style="font-size:19px;font-weight:700;color:#04277D">{{ t.voiceReminderTitle }}</span>
-              <span style="font-size:15px;font-weight:600;color:#5C6BB0">{{ t.voiceReminderHint }}</span>
+              <span style="font-size:15px;font-weight:600;color:#5262AA">{{ t.voiceReminderHint }}</span>
             </span>
           </button>
           <div style="flex:1 0 16px"></div>
@@ -1376,17 +1391,34 @@ class Component extends DCLogic {
   componentDidMount(){ try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} this._ovSeen=this.state.overlay; clearInterval(this._remPoll); this._remPoll=setInterval(()=>this.reminderTick(),250); this._lastLoc={phase:this.state.phase, obStep:this.state.obStep, tab:this.state.tab}; this._introTok=0;
     try{ localStorage.removeItem('carepill_lang'); }catch(e){}
     try{ const sy=window.speechSynthesis; if(sy){ sy.getVoices(); sy.onvoiceschanged=()=>{ sy.getVoices(); }; } }catch(e){}
-    this._cpKey=(e)=>this.onCpKey(e); document.addEventListener('keydown', this._cpKey); this.syncInert(); }
+    this._cpKey=(e)=>this.onCpKey(e); document.addEventListener('keydown', this._cpKey); this.syncInert(); this.setupLeave(); }
   syncInert(){ try{
     const f=document.querySelector('[data-cp-frame]'); if(!f) return; const s=this.state;
     const tr=f.querySelector('[data-cp-track]');
     if(tr){ tr.querySelectorAll('section[data-screen-label]').forEach((el,i)=>{ el.inert=!(s.phase==='onboarding' && i===s.obStep); }); }
-    const kids=[...f.children]; const fr=f.getBoundingClientRect(); let top=-1;
+    const kids=[...f.children].filter(el=>!el.classList.contains('cp-leaving')); const fr=f.getBoundingClientRect(); let top=-1;
     kids.forEach(el=>{ const r=el.getBoundingClientRect(); const z=parseInt(getComputedStyle(el).zIndex)||0; if(Math.abs(r.left-fr.left)<1 && Math.abs(r.top-fr.top)<1 && Math.abs(r.width-fr.width)<1 && Math.abs(r.height-fr.height)<1 && z>top) top=z; });
     kids.forEach(el=>{ const z=parseInt(getComputedStyle(el).zIndex)||0; el.inert = top>=0 && z<top && el!==f.firstElementChild; });
   }catch(e){} }
+  setupLeave(){ try{
+    const f=document.querySelector('[data-cp-frame]'); if(!f || this._cpMO) return;
+    this._cpScroll=(e)=>{ const t=e.target; if(t && t.nodeType===1) t._cpST=t.scrollTop; };
+    f.addEventListener('scroll', this._cpScroll, true);
+    this._cpMO=new MutationObserver(ms=>{ ms.forEach(m=>m.removedNodes.forEach(n=>{
+      if(n.nodeType!==1 || n.isConnected || n.classList.contains('cp-leaving')) return;
+      const z=parseInt(n.style.zIndex)||0; if(n.style.position!=='absolute' || z<80) return;
+      const sh=[...n.querySelectorAll('[style*="cpUp"]')][0]; if(sh){ sh.classList.add('cp-sheet'); n.classList.add('cp-has-sheet'); }
+      n.classList.add('cp-leaving'); n.inert=true; n.setAttribute('aria-hidden','true');
+      f.appendChild(n);
+      [n,...n.querySelectorAll('*')].forEach(el=>{ if(el._cpST) el.scrollTop=el._cpST; });
+      let gone=false; const done=()=>{ if(gone) return; gone=true; if(n.parentNode) n.parentNode.removeChild(n); this.syncInert(); };
+      n.addEventListener('animationend', e=>{ if(sh ? e.target===sh : e.target===n) done(); });
+      setTimeout(done, 450);
+    })); });
+    this._cpMO.observe(f,{childList:true});
+  }catch(e){} }
   onCpKey(e){ if(e.key!=='Enter' && e.key!==' ') return; const t=e.target; if(t && t.getAttribute && t.getAttribute('role')==='button' && t.tagName!=='BUTTON'){ e.preventDefault(); t.click(); } }
-  componentWillUnmount(){ try{ document.removeEventListener('keydown', this._cpKey); }catch(e){} clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
+  componentWillUnmount(){ try{ document.removeEventListener('keydown', this._cpKey); if(this._cpMO) this._cpMO.disconnect(); }catch(e){} clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
   componentDidUpdate(prevProps, prevState){
     this.syncInert();
     if(prevState && prevState.overlay==='anna' && this.state.overlay!=='anna'){ this.abortListen(); if(this.state.srHeard||this.state.srResult||this.state.srErr) this.setState({srHeard:'', srResult:'', srErr:''}); }
@@ -2377,7 +2409,7 @@ class Component extends DCLogic {
     const timeline=doses.filter(d=>!hero||d.id!==hero.id).map(d=>{
       const m={ ...d };
       if(d.status==='taken'){ m.chipBg='#E6F4EF'; m.chipFg='#0D5C4D'; m.chipLabel=t.chipTaken; m.hasAction=false; m.actLabel=''; m.onAct=()=>{}; m.actBd='transparent'; m.actFg='#0D5C4D'; }
-      else if(d.status==='missed'){ m.chipBg='#F6E9E1'; m.chipFg='#AF5F3E'; m.chipLabel=t.chipMissed; m.hasAction=true; m.actLabel=t.actResolve; m.onAct=()=>this.openMissed(d); m.actBd='#AF5F3E'; m.actFg='#AF5F3E'; }
+      else if(d.status==='missed'){ m.chipBg='#F6E9E1'; m.chipFg='#9C5537'; m.chipLabel=t.chipMissed; m.hasAction=true; m.actLabel=t.actResolve; m.onAct=()=>this.openMissed(d); m.actBd='#9C5537'; m.actFg='#9C5537'; }
       else { m.chipBg='#E0E7FF'; m.chipFg='#04277D'; m.chipLabel=t.chipUpcoming; m.hasAction=true; m.actLabel=t.actTake; m.onAct=()=>this.openReminder(d); m.actBd='#04277D'; m.actFg='#04277D'; }
       return m;
     });
@@ -2387,7 +2419,7 @@ class Component extends DCLogic {
       {key:'pillbox', label:t.navPillbox, active:s.tab==='pillbox', onClick:()=>this.setTab('pillbox')},
       {key:'call', label:t.navCall, active:s.tab==='call', onClick:()=>this.requestCall(null,'emergency_button')},
       {key:'profile', label:t.navProfile, active:s.tab==='profile', onClick:()=>this.setTab('profile')}
-    ].map(n=>({ ...n, color:n.active?ACCENT:'#9AA8A3', bg:n.active?'rgba(4,39,125,0.10)':'transparent', isPill:n.key==='pillbox', isCallIcon:n.key==='call', isProfileIcon:n.key==='profile' }));
+    ].map(n=>({ ...n, color:n.active?ACCENT:'#677872', bg:n.active?'rgba(4,39,125,0.10)':'transparent', isPill:n.key==='pillbox', isCallIcon:n.key==='call', isProfileIcon:n.key==='profile' }));
 
     const gi=(s.firstName.trim()[0]||'').toUpperCase();
     const pi=((s.firstName.trim()[0]||'')+(s.lastName.trim()[0]||'')).toUpperCase();
@@ -2493,8 +2525,8 @@ class Component extends DCLogic {
       tpHourInc:()=>this.tpAdjHour(1), tpHourDec:()=>this.tpAdjHour(-1),
       tpMinInc:()=>this.tpAdjMin(1), tpMinDec:()=>this.tpAdjMin(-1),
       tpAM:()=>this.tpSetPeriod('AM'), tpPM:()=>this.tpSetPeriod('PM'),
-      tpAMbg: s.tpH<12?'#EAEEF7':'#F5F7FB', tpAMfg: s.tpH<12?'#3E4A66':'#707B95', tpAMbd: s.tpH<12?'2px solid #AEB9D6':'1.5px solid #DCE4E2', tpAMon: s.tpH<12,
-      tpPMbg: s.tpH>=12?'#EAEEF7':'#F5F7FB', tpPMfg: s.tpH>=12?'#3E4A66':'#707B95', tpPMbd: s.tpH>=12?'2px solid #AEB9D6':'1.5px solid #DCE4E2', tpPMon: s.tpH>=12,
+      tpAMbg: s.tpH<12?'#EAEEF7':'#F5F7FB', tpAMfg: s.tpH<12?'#3E4A66':'#657089', tpAMbd: s.tpH<12?'2px solid #AEB9D6':'1.5px solid #DCE4E2', tpAMon: s.tpH<12,
+      tpPMbg: s.tpH>=12?'#EAEEF7':'#F5F7FB', tpPMfg: s.tpH>=12?'#3E4A66':'#657089', tpPMbd: s.tpH>=12?'2px solid #AEB9D6':'1.5px solid #DCE4E2', tpPMon: s.tpH>=12,
       tpToggleFmt:()=>this.tpToggleFmt(), saveTimePicker:()=>this.saveTimePicker(), closeTimePicker:()=>this.closeTimePicker(), tpStop:(e)=>e.stopPropagation(),
       timeSlots,
       // registration
@@ -2503,7 +2535,7 @@ class Component extends DCLogic {
       showCodeErr:!!s.codeErr, regCodeErrMsg:s.codeErr||'', codeBorder:s.codeErr?'#BA1A1A':'#DCE4E2',
       showRegNameErr:s.regNameErr, regNameBorder:s.regNameErr?'#BA1A1A':'#DCE4E2',
       // emergency form
-      relToggle:()=>this.toggleRel(), relOpen:s.relOpen, relCaret:s.relOpen?'180deg':'0deg', relLabel:s.relationship?this.trRel(s.relationship):t.selectRelationship, relColor:s.relationship?'#1E2E29':'#BFC9C4', relOptions,
+      relToggle:()=>this.toggleRel(), relOpen:s.relOpen, relCaret:s.relOpen?'180deg':'0deg', relLabel:s.relationship?this.trRel(s.relationship):t.selectRelationship, relColor:s.relationship?'#1E2E29':'#667970', relOptions,
       nameVal:s.fullName, phoneVal:s.phone,
       showNameErr:s.nameErr, nameBorder:s.nameErr?'#BA1A1A':'#DCE4E2',
       showPhoneErr:s.phoneErr, phoneBorder:s.phoneErr?'#BA1A1A':'#DCE4E2', phoneRing:s.phoneErr?'0 0 0 3px rgba(211,47,47,0.14)':'0 1px 2px rgba(0,0,0,.04)',

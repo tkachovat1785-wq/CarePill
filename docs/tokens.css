@@ -1,13 +1,15 @@
 /* CarePill — Design Tokens (HTML/CSS)
-   Version 2026-11-18. Values measured from index.html (commit 55aede1). See DESIGN_SYSTEM.md.
+   Version 2026-11-25 (rev. 3, accessibility fixes for users 60+). Values measured from index.html. See DESIGN_SYSTEM.md.
    Source markers in comments: R = rendered measurement, S = read from app CSS. */
 
 :root {
   /* ---- Brand ---- */
   --cp-navy: #04277D;              /* R primary */
-  --cp-navy-soft: #5C6BB0;         /* R ghost / "Tap to change" */
+  --cp-navy-soft: #5C6BB0;         /* R ghost / "Tap to change" (white / page bg) */
+  --cp-navy-soft-strong: #5262AA;  /* R hint text on lavender (>= 4.6:1) */
   --cp-teal: #0D5C4D;              /* R success */
   --cp-emergency: #AF5F3E;         /* R default prop emergencyColor (options #BA1A1A, #E07B4F) */
+  --cp-missed: #9C5537;            /* R "Missed" chip, missed check-in, Resolve outline (>= 4.7:1) */
   --cp-call-end: #E5453A;          /* R */
   --cp-danger: #BA1A1A;            /* R */
   --cp-danger-surface: #FBE9E9;    /* R */
@@ -39,12 +41,13 @@
   --cp-text-modal-label: #2F5249;  /* R */
   --cp-text-anna: #243A6E;         /* R */
   --cp-text-on-navy: #A9D7CC;      /* R */
-  --cp-placeholder: #BFC9C4;       /* R */
-  --cp-icon-muted: #9AA8A3;        /* R */
+  --cp-placeholder: #667970;       /* R 4.6:1 on white */
+  --cp-icon-muted: #9AA8A3;        /* R decorative chevrons only */
+  --cp-nav-inactive: #677872;      /* R inactive nav label + icon, 4.7:1 on white */
 
   /* ---- AM/PM ---- */
   --cp-ampm-on-bg: #EAEEF7;  --cp-ampm-on-fg: #3E4A66;  --cp-ampm-on-border: #AEB9D6;   /* R */
-  --cp-ampm-off-bg: #F5F7FB; --cp-ampm-off-fg: #707B95; --cp-ampm-off-border: #DCE4E2;  /* R */
+  --cp-ampm-off-bg: #F5F7FB; --cp-ampm-off-fg: #657089; --cp-ampm-off-border: #DCE4E2;  /* R */
 
   /* ---- Borders (S: exact widths from CSS) ---- */
   --cp-border: #DCE4E2;            /* 1.5px inputs, chips, back button */
@@ -109,8 +112,24 @@
 @keyframes cpPop  { 0% { transform: scale(.7); opacity: 0 } 60% { transform: scale(1.06) } 100% { transform: scale(1); opacity: 1 } }
 @keyframes cpPulse{ 0% { transform: scale(1); opacity: .55 } 70% { transform: scale(1.9); opacity: 0 } 100% { transform: scale(1.9); opacity: 0 } }
 @keyframes cpToast{ 0% { transform: translateY(14px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
-/* App today: reduced motion only stops .cp-ride and .cp-wheel (Welcome illustration). */
-@media (prefers-reduced-motion: reduce) { .cp-ride, .cp-wheel { animation: none !important; } }
+@keyframes cpFadeOut  { 0% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes cpDown     { 0% { transform: translateY(0) } 100% { transform: translateY(100%) } }
+@keyframes cpScrimOut { 100% { background-color: transparent; backdrop-filter: none } }
+/* Closing: windows leave the way they came (the app adds .cp-leaving / .cp-sheet when a window is removed). */
+.cp-leaving { pointer-events: none !important; animation: cpFadeOut .25s ease forwards !important; }
+.cp-leaving.cp-has-sheet { animation: cpScrimOut .3s ease forwards !important; }
+.cp-leaving .cp-sheet { animation: cpDown .3s cubic-bezier(.4,0,1,1) forwards !important; }
+/* Reduced motion: no loops, no slides, windows only fade. */
+@media (prefers-reduced-motion: reduce) {
+  .cp-ride, .cp-wheel { animation: none !important; }
+  [data-cp-frame] * { animation-iteration-count: 1 !important; }
+  [data-cp-frame] [style*="infinite"] { animation: none !important; }
+  [data-cp-frame] [style*="cpUp"], [data-cp-frame] [style*="cpPop"] { animation: cpFade .2s ease !important; }
+  .cp-leaving .cp-sheet { animation: cpFadeOut .2s ease forwards !important; }
+}
+
+/* ===== Accessibility minimums for users aged 60+ ===== */
+:root { --cp-text-min: 14px; --cp-target-min: 44px; --cp-target-comfort: 48px; --cp-contrast-min: 4.5; }
 
 /* ===== Interaction states (R/S, same rules as the app) ===== */
 :root { --cp-focus-ring: #04277D; --cp-focus-ring-on-navy: #FFFFFF; --cp-focus-width: 3px; --cp-focus-offset: 3px; --cp-pressed-filter: brightness(.85); --cp-label-line-height: 1.15; }
@@ -152,7 +171,7 @@ button:not(:disabled):active, [role="button"]:active { filter: var(--cp-pressed-
 .cp-hero { background: var(--cp-navy); border-radius: var(--cp-r-hero); padding: 26px; box-shadow: var(--cp-sh-hero); color: #fff; }
 
 .cp-nav { display: flex; justify-content: space-around; background: #fff; border: 1.5px solid var(--cp-border-nav); border-radius: var(--cp-r-nav); padding: 10px 8px; box-shadow: var(--cp-sh-nav); }
-.cp-nav__tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 0; border: none; border-radius: 16px; background: transparent; color: var(--cp-icon-muted); font: 700 13px var(--cp-font); }
+.cp-nav__tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 0; border: none; border-radius: 16px; background: transparent; color: var(--cp-nav-inactive); font: 700 14px var(--cp-font); }
 .cp-nav__tab[aria-current="page"] { background: var(--cp-nav-active); color: var(--cp-navy); }
 
 .cp-sheet-scrim  { position: absolute; inset: 0; background: var(--cp-scrim-sheet); display: flex; flex-direction: column; justify-content: flex-end; animation: cpFade .25s ease; }

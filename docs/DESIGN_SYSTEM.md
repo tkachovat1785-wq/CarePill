@@ -1,6 +1,6 @@
 # CarePill — Design System Specification
 
-**Version:** 2026-11-18, rev. 2. Rebuilt from the app in this repository (`index.html` at commit `55aede1`), then updated for the UI fixes in §10a (typography, Medication Details buttons, interaction states). This replaces the earlier handoff spec.
+**Version:** 2026-11-25, rev. 3. Rebuilt from the app in this repository (`index.html` at commit `55aede1`), then updated for the UI fixes in §10a (typography, Medication Details buttons, interaction states) and the accessibility fixes for users aged 60+ in §10b (text size, contrast, touch targets, closing motion, reduced motion). This replaces the earlier handoff spec.
 
 **Single source of truth:** where this document and `index.html` disagree, `index.html` wins.
 
@@ -50,8 +50,10 @@ Known inconsistencies in the app itself are listed in [§10](#10-known-inconsist
 |---|---|---|---|
 | `navy` | `#04277D` | Primary buttons, headings, labels, icons, selected borders. Most used colour (417 occurrences). | R |
 | `teal` | `#0D5C4D` | Success circles, "Taken" chip text, "Emergency contact" status text | R |
-| `navy-soft` | `#5C6BB0` | "Skip for now", "Tap to change", "Tap to hear it again" | R |
-| `emergency` | `#AF5F3E` (default prop) | Call buttons, "Resolve with Anna" outline, missed labels. Options: `#AF5F3E`, `#BA1A1A`, `#E07B4F`. | R/S |
+| `navy-soft` | `#5C6BB0` | "Skip for now", "Tap to change" (on white / page background) | R |
+| `navy-soft-strong` | `#5262AA` | Hint text on lavender: "Tap to hear it again", Anna sheet hint (4.6–4.8:1) | R |
+| `emergency` | `#AF5F3E` (default prop) | Call buttons. Options: `#AF5F3E`, `#BA1A1A`, `#E07B4F`. | R/S |
+| `missed` | `#9C5537` | "Missed" chip, "Missed dose check-in" overline, "Resolve with Anna" outline (4.7–5.6:1) | R |
 | `call-end` | `#E5453A` | End-call button, shadow `0 12px 30px rgba(229,69,58,.4)` | R |
 | `danger` | `#BA1A1A` | Destructive buttons and labels, input error border and text | R |
 | `danger-surface` | `#FBE9E9` | Delete-dialog icon circle | R |
@@ -87,8 +89,9 @@ Known inconsistencies in the app itself are listed in [§10](#10-known-inconsist
 | `text-modal-label` | `#2F5249` | "HOW TO TAKE IT" overline | R |
 | `text-anna` | `#243A6E` | Anna sheet hint text, Anna toast text | R |
 | `text-on-navy-muted` | `#A9D7CC` | Secondary text on the navy "Next dose" card | R |
-| `placeholder` | `#BFC9C4` | Select-field placeholder ("Select relationship") | R |
-| `icon-muted` | `#9AA8A3` | Inactive nav labels and icons, chevrons | R |
+| `placeholder` | `#667970` | Select-field placeholder ("Select relationship"), 4.6:1 on white | R |
+| `icon-muted` | `#9AA8A3` | Decorative chevrons only | R |
+| `nav-inactive` | `#677872` | Inactive nav labels and icons, 4.7:1 on white | R |
 
 ### 2.4 Borders
 
@@ -107,7 +110,7 @@ Known inconsistencies in the app itself are listed in [§10](#10-known-inconsist
 | State | bg | text | border | Src |
 |---|---|---|---|---|
 | Selected | `#EAEEF7` | `#3E4A66` 20px/600 | 2px `#AEB9D6` | R |
-| Unselected | `#F5F7FB` | `#707B95` 20px/600 | 1.5px `#DCE4E2` | R/S |
+| Unselected | `#F5F7FB` | `#657089` 20px/600 | 1.5px `#DCE4E2` | R/S |
 
 ### 2.6 Scrims
 
@@ -153,11 +156,11 @@ All text renders in Inter. 42 buttons set no `font-family` inline; they now inhe
 | Error text | 16 / 600 | normal | normal | `#BA1A1A` | Field errors | R |
 | Overline | 15 / 600–700 | 0.4–0.6px | normal | `#2C3531` / navy, UPPERCASE | "STEP 1 OF 2 · SAFETY", "NEXT DOSE" | R |
 | Detail overline | 14 / 700 | 0.4–0.5px | normal | `#2C3531`, UPPERCASE | Detail rows, "HOUR" / "MIN" | R |
-| Status chip | 14 / 700 | normal | normal | `#AF5F3E` | "Missed" | R |
-| Nav label | 13 / 700 | normal | 1.15 | navy active, `#9AA8A3` inactive | Bottom nav | R |
-| Small caption | 13 / 600, 12 / 700 | 0.4px / normal | normal | `#2C3531` | Contact relationship (13), schedule "AM" (12) | R |
+| Status chip | 14 / 700 | normal | normal | `#9C5537` | "Missed" | R |
+| Nav label | 14 / 700 | normal | 1.15 | navy active, `#677872` inactive | Bottom nav | R |
+| Small caption | 14 / 600, 14 / 700 | 0.4px / normal | normal | `#2C3531` | Contact relationship, schedule "AM" | R |
 
-**Minimum size.** The earlier spec said "nothing below 14px". The app has three text styles below that: 13px nav labels, 13px relationship overline, and the 12px AM/PM inside the schedule time tile. **R**
+**Minimum size.** Nothing below 14px. The three former exceptions (13px nav labels, 13px relationship overline, 12px AM/PM) are now 14px (§10b). The only smaller text is the first "A" on the text-size picker, which shows the smallest size on purpose. **R**
 
 **Text-size scale.** `[1, 1.13, 1.27, 1.4]`, applied with CSS `zoom` on screens and overlays (`feedZoom`). At the largest step, rendered elements carry `zoom: 1.4`. **R/S**
 
@@ -242,7 +245,9 @@ All text renders in Inter. 42 buttons set no `font-family` inline; they now inhe
 | Track | `transform .42s cubic-bezier(.4,0,.2,1)` | Onboarding slide | S |
 | Small transitions | `transform .2s` (3 uses: carets / chevrons) | Dropdown carets | S |
 
-**Reduced motion.** `@media (prefers-reduced-motion: reduce)` turns off only `.cp-ride` and `.cp-wheel` (Welcome riders and wheels). `cpPulse`, `cpGlow`, `cpWave`, `cpRing`, `cpDrift` and `cpSway` keep running. **S**
+**Closing.** Windows leave the way they came. Bottom sheets slide down (`cpDown`, `.3s cubic-bezier(.4,0,1,1)`) while the scrim fades (`cpScrimOut`). Full-screen windows, dialogs and toasts fade out (`cpFadeOut`, `.25s`). During the exit the window is `inert` and ignores taps, so the screen underneath responds at once. **R**
+
+**Reduced motion.** With the system setting on: no infinite loops (`cpPulse`, `cpGlow`, `cpWave`, `cpRing`, `cpDrift`, `cpSway` and the rest stop), every animation plays once, sheets fade in and out instead of sliding, and `cpPop` becomes a fade. The default experience is unchanged. **R**
 
 ---
 
@@ -264,10 +269,10 @@ All sizes are at 428px, text scale 1×. "Seen on" names the screen where the com
 | Outline, large | 364×84 / 372×80 / 372×76 | white, 2px navy, r18 | 20–21/700 navy | Log In (364×84), Edit Contact (80), Add Another Contact (76) | R |
 | Outline | 372×76 / 72 / 70 / 66 / 64 | white, 2px navy, r16 | 18–21/700 navy | Go Back (76), Snooze / No (72), Cancel (70), Add New Contact (66), Add New Medication (64) | R |
 | On-navy button | 320×74 | white, no border, r16 | 21/700 navy | Take Now (hero card) | R |
-| Emergency outline | 330×56 | white, 2px `#AF5F3E`, r14 | 17/700 `#AF5F3E` | Resolve with Anna | R |
+| Emergency outline | 330×56 | white, 2px `#9C5537`, r14 | 17/700 `#9C5537` | Resolve with Anna | R |
 | Ghost | 372×60 | transparent, r14 | 19/700 `#5C6BB0` | Skip for now | R |
 | Ghost destructive | 372×66 | transparent, r16 | 18/700 `#BA1A1A` | Delete Contact | R |
-| Voice replay | 372×88 | `#E7ECFF`, 1.5px `#C7D0F5`, r18 | 19/700 navy + 15/600 `#5C6BB0` | Voice reminder playing | R |
+| Voice replay | 372×88 | `#E7ECFF`, 1.5px `#C7D0F5`, r18 | 19/700 navy + 15/600 `#5262AA` | Voice reminder playing | R |
 | Back | 46×46 | white, 1.5px `#DCE4E2`, r14, navy chevron | — | All step screens | R |
 | Modal close | 44×44 | `#EEF1EF`, 1.5px `#C9D5D1`, r13 | — | Reminder / missed | R |
 | Call (round) | 46×46 | bg emergency, 50% | — | Contact cards | R |
@@ -298,7 +303,7 @@ Keyboard support added with the focus states:
 | Text input (Edit Medication) | 372×70 | same; text 20/600 | R |
 | Text input (Profile) | 372×64 | r14, padding `0 20px`, text 19/500, no shadow | R |
 | Error | — | border `#BA1A1A`. Phone field also gets ring `0 0 0 3px rgba(211,47,47,.14)`. Error row: 16/600 `#BA1A1A`. | R |
-| Select (relationship) | 372×72 | like input; placeholder 20/500 `#BFC9C4`; caret rotates (`transform .2s`) | R |
+| Select (relationship) | 372×72 | like input; placeholder 20/500 `#667970`; caret rotates (`transform .2s`) | R |
 | Dropdown list | 372 wide | white, 1.5px `#DCE4E2`, r16, shadow `0 8px 22px rgba(0,0,0,.08)`; rows 60px, 19/500, 1px `#F0F2F0` dividers, check 20/700 navy | R |
 | Code input | 4 digits, numeric | not measured | A |
 
@@ -321,7 +326,7 @@ Keyboard support added with the focus states:
 | Card | Size | Style | Src |
 |---|---|---|---|
 | Next-dose hero | 372×245 | navy, r26, padding 26, shadow `0 18px 38px rgba(4,39,125,.26)`. Icon tile 66×66 `rgba(255,255,255,.14)` r20. Name 26/700 white; detail 18/500 `#A9D7CC`; time 30/800 white. | R |
-| Schedule item | 372 wide | white, 1.5px `#E8ECEA`, r20, padding `18px 20px`, shadow `0 4px 14px rgba(13,92,77,.05)`. Time tile 54×54 `#F1F5F3` r15 (18/800 + 12/700). Missed chip 14/700 `#AF5F3E`. | R |
+| Schedule item | 372 wide | white, 1.5px `#E8ECEA`, r20, padding `18px 20px`, shadow `0 4px 14px rgba(13,92,77,.05)`. Time tile 54×54 `#F1F5F3` r15 (18/800 + 14/700). Missed chip 14/700 `#9C5537`. | R |
 | Reminder time card | 372×156 | white, 1.5px `#DCE4E2`, r22, padding `24px 26px 20px`. Overline 15/700 navy; time 60/700. | R |
 | Detail row card | 372×86 | white, 1.5px `#E8ECEA`, r18, padding `18px 20px`. Overline 14/700; value 20/600. | R |
 | Contact card | 372×102 (saved) / 140 (manage) | white, 1.5px `#E8ECEA`, r20, padding 18, shadow `0 6px 18px rgba(13,92,77,.06)`. Avatar 56 `#E0E8FF`; name 20–21/700; call button 46. | R |
@@ -333,7 +338,7 @@ Keyboard support added with the focus states:
 | Item | Spec | Src |
 |---|---|---|
 | Bottom nav | Bar 380×86, white, 1.5px `#EAEEEC`, r24, padding `10px 8px`, shadow `0 12px 30px rgba(13,92,77,.1)`. Wrapper gradient `#FAF9F7` 82% → transparent. | R/S |
-| Nav tab | 121×64, r16, padding `9px 0`, gap 5. Active bg `rgba(4,39,125,.10)`, label navy; inactive transparent, `#9AA8A3`. Labels 13/700. | R |
+| Nav tab | 121×64, r16, padding `9px 0`, gap 5. Active bg `rgba(4,39,125,.10)`, label navy; inactive transparent, `#677872`. Labels 14/700. | R |
 | Anna button | See §8.1. Shown when `showAnna` is true on: onboarding step 7 onwards (Emergency Contact and later), the Log In flow, and all app tabs except Call. Meet Anna (step 6) uses its own centred 132px mic button instead. | S (rule `annaBtnVisible`), R |
 | Back button | See §8.1 | R |
 
@@ -346,7 +351,7 @@ Keyboard support added with the focus states:
 | Call confirm | Bottom sheet | `#E3F2EE`, r34 top, padding `30px 28px 36px`, gap 10. 84px icon circle `rgba(4,39,125,.10)`. Title 25/700. Primary 80 + outline 72. | R |
 | Action complete | Bottom sheet | `#E3F2EE`, same padding, gap 12. Shared by "Medication Saved", "Contact Saved" and similar. | S |
 | Anna | Bottom sheet | `#E0E7FF`, r34 top, padding `26px 28px 34px`, gap 16, max-height 86%, blur scrim. Answer-by-voice 68px; action buttons 64px outline. | R |
-| Time picker | Bottom sheet | White, r34 top, padding `26px 28px 32px`. Grab handle 44×5 `#DCE4E2` r3. Stepper 88×64. Digits 64/800. Save 86 + Cancel 64. | R |
+| Time picker | Bottom sheet (12/24-hour toggle min-height 48px) | White, r34 top, padding `26px 28px 32px`. Grab handle 44×5 `#DCE4E2` r3. Stepper 88×64. Digits 64/800. Save 86 + Cancel 64. | R |
 | Medication history | Bottom sheet | White, r34 top, max-height 780px | S |
 | Contact picker | Bottom sheet | `#FAF9F7`, r34 top, max-height 560px | S |
 | Delete / Log out | Centered dialog | White, r26, max-width 360, padding `30px 26px 24px`. Icon circle 72 (`#FBE9E9` delete, `rgba(4,39,125,.10)` logout). Title 25/800. Primary or destructive 78 + outline 70. | R |
@@ -359,12 +364,12 @@ Keyboard support added with the focus states:
 
 | Item | Status | Src |
 |---|---|---|
-| Touch targets | Smallest interactive targets are 44×44 (modal close) and 46×46 (back, call). Medication Details' Edit and Delete render at 80px and 66px and grow with the text size (up to 112px and 92px). | R |
-| Contrast | High-contrast secondary text `#2C3531` is the default | R |
+| Touch targets | Every interactive element is at least 44×44 (checked on 41 screens). Smallest: modal close 44×44, back and call 46×46. The 12/24-hour toggle is 48px tall. Volume sliders have a 44px tall touch area with the same 8px track. Medication Details' Edit and Delete render at 80px and 66px and grow with the text size (up to 112px and 92px). | R |
+| Contrast | All text meets WCAG AA (4.5:1, large text 3:1) on 41 screens. High-contrast secondary text `#2C3531` is the default. | R |
 | Selection | Option tiles combine colour, 2px border and a check icon. Chips combine fill and colour. AM/PM uses `aria-pressed`. | R/S |
 | Focus | 3px navy ring (white on navy) on `:focus-visible`; hidden screens are `inert`; Enter / Space activate `role="button"` cards | R/S |
 | Screen-reader labels | 31 static `aria-label`s are English only. Anna button and some others are localized. | S |
-| Reduced motion | Partial (see §7) | S |
+| Reduced motion | Supported (see §7) | R |
 | Languages | English, German, Russian (395 strings each) | R/S |
 
 ---
@@ -375,9 +380,9 @@ These are present in `index.html` today. They need your decision before anything
 
 1. ~~Fonts~~ — fixed, see §10a.
 2. ~~Medication Details buttons compressed~~ — fixed, see §10a.
-3. **Text below 14px.** Bottom-nav labels (13px), the relationship overline on the contact card (13px), and AM/PM in the schedule tile (12px).
+3. ~~Text below 14px~~ — fixed, see §10b.
 4. ~~No focus or pressed states~~ — fixed, see §10a. Hover and disabled styles still do not exist (none are used).
-5. **Reduced motion covers only the Welcome illustration.**
+5. ~~Reduced motion covers only the Welcome illustration~~ — fixed, see §10b.
 6. **Not responsive.** A fixed 428px frame is clipped on phones narrower than about 442px.
 7. **Props vs fallbacks.** `emergencyColor` and `highContrast` defaults (`#AF5F3E`, true) differ from the code fallbacks (`#E07B4F`, false).
 8. **Language after reload.** The app always starts in English, although the chosen language is saved to `localStorage`.
@@ -391,6 +396,18 @@ These are present in `index.html` today. They need your decision before anything
 | 2 | Medication Details Edit / Delete squeezed to 46 / 37px (as low as 33 / 27px at larger text) | `flex: none` on both buttons in the scrolling column | 80 / 66px at text size 1, 90 / 75, 102 / 84, 112 / 92px at sizes 2–4, in EN, DE and RU. No text clipping. The content scrolls. |
 | 3 | No focus or pressed states | Focus ring and pressed filter (§8.1); keyboard access for tappable cards; `inert` on hidden screens | Keyboard test: Tab stays on screen and inside overlays; Enter opens cards and selects tiles. |
 
+## 10b. Accessibility fixes for users aged 60+ (2026-11-25)
+
+Audit: WCAG 2.1 AA checks on 41 app states (onboarding, Pillbox, reminders, missed dose, emergency call, contacts, profile, text size, Anna; EN / DE / RU).
+
+| # | Issue | Fix in `index.html` | Verified |
+|---|---|---|---|
+| 1 | Text below 14px in 3 places | Nav labels 13→14px, contact relationship 13→14px, schedule AM/PM 12→14px | Fits in EN / DE / RU; no other element moved |
+| 2 | 9 text colours below 4.5:1 | Same hues, slightly darker: nav inactive `#9AA8A3`→`#677872` (2.5→4.7:1), placeholder `#BFC9C4`→`#667970` (1.7→4.6:1), missed `#AF5F3E`→`#9C5537` (3.9→4.7:1), lavender hints `#5C6BB0`→`#5262AA` (4.1→4.6:1), AM/PM off `#707B95`→`#657089` (4.0→4.6:1) | 0 contrast failures on 41 states |
+| 3 | 2 touch targets below 44px | 12/24-hour toggle 41→48px tall; volume sliders 11→44px touch area (track unchanged, no layout shift) | 0 targets below 44px |
+| 4 | Windows closed instantly | Exit animations (§7, Closing) | Sheets slide down in .3s, screens fade in .25s; no taps blocked |
+| 5 | Reduced motion covered 2 of 14 animations | Full reduced-motion support (§7) | Checked with the setting on and off |
+
 ## 11. Changes from the previous spec (handoff)
 
 | Topic | Previous spec | App (verified) |
@@ -400,9 +417,9 @@ These are present in `index.html` today. They need your decision before anything
 | Reminder / missed / snooze / taken | Mint bottom sheets | Full-screen mint modals |
 | Anna | Inline "Speak to Anna" tiles, floating entry | One top-right Anna button; lavender Anna sheet with voice input; Meet Anna screen |
 | Languages | EN, ES, DE, FR, RU | EN, DE, RU |
-| Minimum text size | 14px | 12px and 13px exist (see §10) |
+| Minimum text size | 14px | 14px (fixed in §10b) |
 | Button press feedback | "darken / settle" | 15% darker on press (`brightness(.85)`), no animation |
-| Reduced motion | All decorative motion | Welcome illustration only |
+| Reduced motion | All decorative motion | All decorative motion (fixed in §10b) |
 | Input text | 19px/500 | 20/500, 21/600 or 19/500 depending on screen |
 | Outline button radius | 16px | 16px or 18px depending on height |
-| New tokens | — | `#234B43`, `#2F5249`, `#243A6E`, `#A9D7CC`, `#E7ECFF`, `#BFC9C4`, `#EEF1EF` / `#C9D5D1`, `#CFE0DA`, `#EAEEEC`, `#E5453A` |
+| New tokens | — | `#234B43`, `#2F5249`, `#243A6E`, `#A9D7CC`, `#E7ECFF`, `#667970`, `#677872`, `#9C5537`, `#5262AA`, `#657089`, `#EEF1EF` / `#C9D5D1`, `#CFE0DA`, `#EAEEEC`, `#E5453A` |
