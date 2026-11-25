@@ -1614,13 +1614,11 @@ class Component extends DCLogic {
     const isFinal=ids.length>0 && ids.every(id=>after[id]);
     clearTimeout(this._remVoice); this._lastAlert=Date.now(); this._quietSince=0;
     this.setState({taken:after, overlay: isFinal?'takenFinal':'success'}, ()=>this.speakPraise(isFinal)); }
-  // ---- Anna's reaction once a dose is confirmed: praise + the next scheduled dose (or a bigger praise when the day is complete) ----
+  // ---- Anna's reaction once a dose is confirmed: short praise only (a bigger praise when the day is complete); the next dose is shown on screen ----
   speakPraise(isFinal){ const t=this.tr(); const person=this.state.firstName.trim(); const nm=person?(', '+person):'';
     if(isFinal){ this.speak(this.fmt(t.voicePraiseAll,{name:nm})); return; }
-    const nx=this.dashMeds().filter(d=>!this.state.taken[d.id]).sort((a,b)=>a.h-b.h)[0];
-    const parts=[this.fmt(t.voicePraise,{name:nm})];
-    if(nx) parts.push(this.fmt(t.voiceNextDose,{med:nx.name, dose:nx.dose||'', time:[nx.time,nx.period].filter(Boolean).join(' ')}));
-    this.speak(parts.join(' ')); }
+    // Short praise only: the next dose is shown on screen, not spoken (decision 2026-11-25)
+    this.speak(this.fmt(t.voicePraise,{name:nm})); }
   goToPillbox(){ this.stopSpeak(); this.setState({overlay:null, reminderMed:null, tab:'pillbox', phase:'app'}); }
   openMissed(d){ this.setState({overlay:'missed', reminderMed:d}); }
   logMissedTaken(){ this.takeMed(); }
