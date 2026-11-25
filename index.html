@@ -1391,7 +1391,7 @@ class Component extends DCLogic {
   componentDidMount(){ try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} this._ovSeen=this.state.overlay; clearInterval(this._remPoll); this._remPoll=setInterval(()=>this.reminderTick(),250); this._lastLoc={phase:this.state.phase, obStep:this.state.obStep, tab:this.state.tab}; this._introTok=0;
     try{ localStorage.removeItem('carepill_lang'); }catch(e){}
     try{ const sy=window.speechSynthesis; if(sy){ sy.getVoices(); sy.onvoiceschanged=()=>{ sy.getVoices(); }; } }catch(e){}
-    this._cpKey=(e)=>this.onCpKey(e); document.addEventListener('keydown', this._cpKey); this.syncInert(); this.setupLeave(); }
+    this._cpKey=(e)=>this.onCpKey(e); document.addEventListener('keydown', this._cpKey); this._cpTap=(e)=>this.userStopVoice(e); document.addEventListener('click', this._cpTap, true); this.syncInert(); this.setupLeave(); }
   syncInert(){ try{
     const f=document.querySelector('[data-cp-frame]'); if(!f) return; const s=this.state;
     const tr=f.querySelector('[data-cp-track]');
@@ -1417,8 +1417,15 @@ class Component extends DCLogic {
     })); });
     this._cpMO.observe(f,{childList:true});
   }catch(e){} }
+  userStopVoice(e){ try{
+    const f=document.querySelector('[data-cp-frame]'); const t=e&&e.target; if(!f||!t||!t.closest||!f.contains(t)) return;
+    const act=t.closest('button,[role="button"],a'); const scrim=[...f.children].some(c=>c===t && (parseInt(c.style.zIndex)||0)>=80);
+    if(!act && !scrim) return; if(act && act.closest('.cp-leaving')) return;
+    this._quietSince=0; this._lastAlert=Date.now();
+    this.cancelIntro(); if(this.state.introSpeaking) this.setState({introSpeaking:false, introDone:true});
+  }catch(err){} }
   onCpKey(e){ if(e.key!=='Enter' && e.key!==' ') return; const t=e.target; if(t && t.getAttribute && t.getAttribute('role')==='button' && t.tagName!=='BUTTON'){ e.preventDefault(); t.click(); } }
-  componentWillUnmount(){ try{ document.removeEventListener('keydown', this._cpKey); if(this._cpMO) this._cpMO.disconnect(); }catch(e){} clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
+  componentWillUnmount(){ try{ document.removeEventListener('keydown', this._cpKey); document.removeEventListener('click', this._cpTap, true); if(this._cpMO) this._cpMO.disconnect(); }catch(e){} clearTimeout(this._t); clearTimeout(this._succ); clearTimeout(this._b); clearTimeout(this._st); clearTimeout(this._volPrev); clearTimeout(this._snz); clearTimeout(this._sysPrev); clearTimeout(this._chimePrev); clearTimeout(this._chimeVoice); clearInterval(this._remPoll); this.cancelIntro(); this.abortListen(); this.stopSpeak(); }
   componentDidUpdate(prevProps, prevState){
     this.syncInert();
     if(prevState && prevState.overlay==='anna' && this.state.overlay!=='anna'){ this.abortListen(); if(this.state.srHeard||this.state.srResult||this.state.srErr) this.setState({srHeard:'', srResult:'', srErr:''}); }
@@ -1574,10 +1581,10 @@ class Component extends DCLogic {
   }catch(e){ return null; } }
   // one shared Anna voice for every flow + language: calm pace, warm pitch, sentence-by-sentence with natural pauses
   voiceRate(){ return 0.88; } voicePitch(){ return 1.05; }
-  speak(text, vol){ try{ const sy=window.speechSynthesis; if(!sy||!text||typeof SpeechSynthesisUtterance==='undefined') return; sy.cancel(); const loc=this.locale(); const lang=this.state.language; const volume=(vol!=null?Math.max(0,Math.min(1,vol)):(this.state.annaVol/100));
-    this.withVoices(()=>{ if(this.state.language!==lang) return; const v=this.pickVoice(loc); if(!v) return;
+  speak(text, vol){ try{ const sy=window.speechSynthesis; if(!sy||!text||typeof SpeechSynthesisUtterance==='undefined') return; sy.cancel(); const loc=this.locale(); const lang=this.state.language; const volume=(vol!=null?Math.max(0,Math.min(1,vol)):(this.state.annaVol/100)); const tok=this._speakTok||0;
+    this.withVoices(()=>{ if(this.state.language!==lang || tok!==(this._speakTok||0)) return; const v=this.pickVoice(loc); if(!v) return;
       String(text).split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean).forEach(c=>{ const u=new SpeechSynthesisUtterance(c); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=volume; sy.speak(u); }); }); }catch(e){} }
-  stopSpeak(){ clearTimeout(this._remVoice); try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
+  stopSpeak(){ this._speakTok=(this._speakTok||0)+1; clearTimeout(this._remVoice); clearTimeout(this._chimeVoice); try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
   speakReminder(d, kind){ const m=this.liveDose(d||this.state.reminderMed); if(!m) return; const t=this.tr(); const person=this.state.firstName.trim()||'';
     const op=kind==='snoozeFollowup'?t.voiceSnoozeOpener:kind==='repeat'?t.voiceRepeatOpener:(kind===true||kind==='missed')?t.voiceMissedOpener:t.voiceOpener;
     const time=[m.time,m.period].filter(Boolean).join(' ');
@@ -1614,7 +1621,7 @@ class Component extends DCLogic {
     const parts=[this.fmt(t.voicePraise,{name:nm})];
     if(nx) parts.push(this.fmt(t.voiceNextDose,{med:nx.name, dose:nx.dose||'', time:[nx.time,nx.period].filter(Boolean).join(' ')}));
     this.speak(parts.join(' ')); }
-  goToPillbox(){ this.setState({overlay:null, reminderMed:null, tab:'pillbox', phase:'app'}); }
+  goToPillbox(){ this.stopSpeak(); this.setState({overlay:null, reminderMed:null, tab:'pillbox', phase:'app'}); }
   openMissed(d){ this.setState({overlay:'missed', reminderMed:d}); }
   logMissedTaken(){ this.takeMed(); }
   snooze(){ this.stopSpeak(); this.setState(s=>({snoozeReturn:s.overlay, overlay:'snoozeConfirm'})); }
@@ -1694,8 +1701,8 @@ class Component extends DCLogic {
   annaContext(){
     const s=this.state, t=this.tr();
     const ACT_CALL={ key:'call', label:t.annaCallContact, run:()=>this.requestCall(null,'anna_call_emergency_contact') };
-    const ACT_ADDMED={ key:'addmed', label:t.annaAddMed, run:()=>{ this.setState({overlay:null}); this.addMedFromHome(); } };
-    const ACT_SCHED={ key:'sched', label:t.annaViewSchedule, run:()=>{ this.setState({overlay:null}); this.setTab('pillbox'); } };
+    const ACT_ADDMED={ key:'addmed', label:t.annaAddMed, run:()=>{ this.stopSpeak(); this.setState({overlay:null}); this.addMedFromHome(); } };
+    const ACT_SCHED={ key:'sched', label:t.annaViewSchedule, run:()=>{ this.stopSpeak(); this.setState({overlay:null}); this.setTab('pillbox'); } };
     let prompt=t.annaHelp, actions=[ACT_CALL], instr=t.annaVoiceApp;
     if(s.phase==='auth'){ prompt=t.hintAuth; instr=t.hintAuthVoice; actions=[]; }
     else if(s.phase==='login'){ if(s.loginStep===0){ prompt=t.hintPhone; instr=t.hintPhoneVoice; } else { prompt=t.hintCode; instr=t.hintCodeVoice; } actions=[]; }

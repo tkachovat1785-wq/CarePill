@@ -370,6 +370,7 @@ Keyboard support added with the focus states:
 | Focus | 3px navy ring (white on navy) on `:focus-visible`; hidden screens are `inert`; Enter / Space activate `role="button"` cards | R/S |
 | Screen-reader labels | 31 static `aria-label`s are English only. Anna button and some others are localized. | S |
 | Reduced motion | Supported (see §7) | R |
+| Anna's voice | Stops the moment the user taps any action (button, tappable card, link, or the dark area around a window). The tapped action may then speak on its own (praise after "Take", Anna's guide, "Hear again"). Speech queued before the tap is dropped. Checked in EN / DE / RU. | R |
 | Languages | English, German, Russian (395 strings each) | R/S |
 
 ---
@@ -407,6 +408,7 @@ Audit: WCAG 2.1 AA checks on 41 app states (onboarding, Pillbox, reminders, miss
 | 3 | 2 touch targets below 44px | 12/24-hour toggle 41→48px tall; volume sliders 11→44px touch area (track unchanged, no layout shift) | 0 targets below 44px |
 | 4 | Windows closed instantly | Exit animations (§7, Closing) | Sheets slide down in .3s, screens fade in .25s; no taps blocked |
 | 5 | Reduced motion covered 2 of 14 animations | Full reduced-motion support (§7) | Checked with the setting on and off |
+| 6 | Anna kept talking after some taps: "Back to Pillbox" on the "Taken" screen, and Anna's quick-action buttons | Any tap on an action stops Anna first; speech queued before the tap is dropped | Voice test in EN / DE / RU: 0 cases where Anna keeps talking |
 
 ## 11. Changes from the previous spec (handoff)
 
