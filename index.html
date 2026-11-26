@@ -3,6 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* Phones: scale the phone mockup (456x954) to fit the visible screen. */
+(function(){
+  function fit(){
+    var w=window.innerWidth, h=window.innerHeight;
+    var sc=Math.min((w-24)/456,(h-24)/954,1);
+    var r=document.documentElement.style;
+    r.setProperty('--cp-scale',sc.toFixed(4)); r.setProperty('--cp-vh',h+'px');
+  }
+  fit(); window.addEventListener('resize',fit); window.addEventListener('orientationchange',fit);
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',fit);
+})();
+</script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -61,10 +74,18 @@
     .cp-leaving .cp-sheet{animation:cpFadeOut .2s ease forwards !important}
     [data-cp-frame] [style*="cpPop"]{animation:cpFade .2s ease !important}
   }
+  /* Phones: show the same desktop phone mockup, scaled down so the whole phone
+     (frame included) fits the screen without scrolling. Desktop is unchanged.
+     --cp-scale is set by the small script in <head>. */
+  @media (max-width: 520px){
+    html,body{height:100%;overflow:hidden;background:#e7e5df}
+    [data-cp-stage]{min-height:0 !important;height:100vh !important;height:var(--cp-vh,100vh) !important;padding:0 !important;overflow:hidden}
+    [data-cp-device]{flex:none;transform:scale(var(--cp-scale,1));transform-origin:center center}
+  }
 </style>
 </helmet>
-<div style="min-height:100vh;width:100%;background:#e7e5df;display:flex;align-items:center;justify-content:center;padding:40px 20px;box-sizing:border-box;font-family:Inter,-apple-system,sans-serif">
-  <div style="position:relative;width:456px;height:954px;border-radius:60px;background:linear-gradient(145deg,#23211f,#0b0a0a);padding:14px;box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.04) inset">
+<div data-cp-stage="" style="min-height:100vh;width:100%;background:#e7e5df;display:flex;align-items:center;justify-content:center;padding:40px 20px;box-sizing:border-box;font-family:Inter,-apple-system,sans-serif">
+  <div data-cp-device="" style="position:relative;width:456px;height:954px;border-radius:60px;background:linear-gradient(145deg,#23211f,#0b0a0a);padding:14px;box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.04) inset">
     <div data-cp-frame="" style="position:relative;width:428px;height:926px;border-radius:46px;overflow:hidden;background:#FAF9F7">
 
       <!-- STATUS BAR -->
