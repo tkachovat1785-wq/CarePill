@@ -1467,7 +1467,7 @@ class Component extends DCLogic {
   // ---- log out ----
   askLogout(){ this.track('logout_requested'); this.setState({overlay:'logout'}); }
   cancelLogout(){ this.setState({overlay:null}); }
-  confirmLogout(){ this.track('logout_confirmed');
+  confirmLogout(){ this.track('logout_confirmed'); { const nm=this.voiceName(); if(nm) this._userName=nm; }
     this._snzPending=false; this._idleSince=0; ['_snz','_remVoice','_t','_succ','_b','_st','_autoRem','_volPrev','_sysPrev','_chimePrev','_chimeVoice','_vw'].forEach(k=>clearTimeout(this[k]));
     this.cancelIntro(); this.abortListen(); this.stopSpeak(); this._lastAnnaSpeech=null; this._callOrigin=null; this._warnSource=null;
     try{ localStorage.removeItem('carepill_lang'); sessionStorage.removeItem('carepill_lang'); }catch(e){}
@@ -1487,7 +1487,7 @@ class Component extends DCLogic {
   loginVerify(){ const err=this.loginValidateCode(); if(err){ this.setState({loginCodeErr:err}); return; } this.loginComplete(); }
   loginComplete(){ this._restoring=true; this.setState({
     loginCodeErr:'', userType:'existing', phase:'app', tab:'pillbox', overlay:null, hist:[],
-    firstName:'Maria', lastName:'Garcia', taken:{asp:true},
+    firstName:this._userName||'Maria', lastName:this._userName?'':'Garcia', nameByUser:!!this._userName, taken:{asp:true},
     contacts:[{name:'Sarah Johnson', rel:'Caregiver', phone:'+1 (555) 123-4567', initials:'SJ'}]
   }); this.armAutoReminder(); }
 
@@ -1517,7 +1517,11 @@ class Component extends DCLogic {
 
   ob(n){ this.setState({obStep:n, relOpen:false}); }
   obBack(){ this.setState(s=>({obStep:Math.max(1,s.obStep-1), relOpen:false})); }
-  field(k){ return e=>this.setState({[k]:e.target.value}); }
+  field(k){ return e=>this.setState(k==='firstName'?{firstName:e.target.value, nameByUser:true}:{[k]:e.target.value}); }
+  // ---- the name Anna says: only a name the user typed (onboarding, voice input or Profile). The demo account name of Log In is never spoken. ----
+  voiceName(){ const s=this.state; if(s.nameByUser===false) return ''; return String(s.firstName||'').replace(/\s+/g,' ').trim(); }
+  // fill {name} in a spoken template; with no name, drop it together with its comma/space so the sentence stays correct
+  fmtName(tpl,name){ if(name) return this.fmt(tpl,{name}); return String(tpl||'').replace(/,\s*\{name\}/g,'').replace(/\{name\}\s*,\s*/g,'').replace(/\s*\{name\}/g,'').replace(/^\s+/,''); }
   num(k){ return e=>this.setState({[k]:Number(e.target.value)}); }
 
   toggleRel(){ this.setState(s=>({relOpen:!s.relOpen})); }
@@ -1641,11 +1645,11 @@ class Component extends DCLogic {
     this.withVoices(()=>{ if(this.state.language!==lang || tok!==(this._speakTok||0)) return; const v=this.pickVoice(loc); if(!v) return;
       this._utts=[]; this.speechChunks(this.forSpeech(text)).forEach(c=>{ const u=new SpeechSynthesisUtterance(c); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=volume; this._utts.push(u); sy.speak(u); }); }); }catch(e){} }
   stopSpeak(){ this._speakTok=(this._speakTok||0)+1; clearTimeout(this._remVoice); clearTimeout(this._chimeVoice); try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
-  speakReminder(d, kind){ const m=this.liveDose(d||this.state.reminderMed); if(!m) return; const t=this.tr(); const person=this.state.firstName.trim()||'';
+  speakReminder(d, kind){ const m=this.liveDose(d||this.state.reminderMed); if(!m) return; const t=this.tr(); const person=this.voiceName();
     const op=kind==='snoozeFollowup'?t.voiceSnoozeOpener:kind==='repeat'?t.voiceRepeatOpener:(kind===true||kind==='missed')?t.voiceMissedOpener:t.voiceOpener;
     if(this.state.language==='de'||this.state.language==='ru'){ this.speak(this.sayReminderText(m, kind, person)); return; }
     const time=[m.time,m.period].filter(Boolean).join(' ');
-    const parts=[this.fmt(op,{person, med:m.name, dose:m.dose||'', time}).replace(/^\s*,\s*/,'').replace(/^(\S+?)!\s*/,(x,w)=>person?x:'')];
+    const parts=[this.fmt(op,{person, med:m.name, dose:m.dose||'', time}).replace(/\s+!/g,'!').replace(/^\s*,\s*/,'').replace(/^(\S+?)!\s*/,(x,w)=>person?x:'')].map(x=>x.charAt(0).toUpperCase()+x.slice(1));
     let instr=this.voiceInstrText(m); if(instr){ instr=instr.charAt(0).toLowerCase()+instr.slice(1); parts.push(this.fmt(t.voiceInstr,{instr})); }
     parts.push(t.voiceCloser);
     this.speak(parts.join(' ')); }
@@ -1663,7 +1667,7 @@ class Component extends DCLogic {
     parts.push(t.voiceCloser); return parts.join(' '); }
   // ---- live voice preview while dragging the Anna's-voice volume slider (debounced; uses the current language + chosen level) ----
   onAnnaVol(e){ const v=Number(e.target.value); this.setState({annaVol:v}); clearTimeout(this._volPrev); this._volPrev=setTimeout(()=>{ this.speak(this.tr().voicePreview, v/100); }, 220); }
-  playAnnaTrialGreeting(){ const t=this.tr(); const name=this.state.firstName.trim(); this.speak(this.fmt(t.annaTrialGreeting,{name: name||t.medication})); }
+  playAnnaTrialGreeting(){ const t=this.tr(); const name=this.voiceName(); this.speak(this.fmtName(t.annaTrialGreeting,name)); }
   // ---- synthesized audio cues (Web Audio) — the app ships no sound files, so system + reminder cues are generated ----
   audioCtx(){ try{ if(!this._ac){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; this._ac=new AC(); } if(this._ac.state==='suspended'){ this._ac.resume(); } return this._ac; }catch(e){ return null; } }
   tone(freq, start, dur, vol, type){ const ac=this._ac; if(!ac) return; const o=ac.createOscillator(); const g=ac.createGain(); o.type=type||'sine'; o.frequency.value=freq; const t0=ac.currentTime+start; const peak=Math.max(0.0001, Math.min(1,vol)*0.85); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+dur+0.05); }
@@ -1684,7 +1688,7 @@ class Component extends DCLogic {
     clearTimeout(this._remVoice); this._lastAlert=Date.now(); this._quietSince=0;
     this.setState({taken:after, overlay: isFinal?'takenFinal':'success'}, ()=>this.speakPraise(isFinal)); }
   // ---- Anna's reaction once a dose is confirmed: short praise only (a bigger praise when the day is complete); the next dose is shown on screen ----
-  speakPraise(isFinal){ const t=this.tr(); const person=this.state.firstName.trim(); const nm=person?(', '+person):'';
+  speakPraise(isFinal){ const t=this.tr(); const person=this.voiceName(); const nm=person?(', '+person):'';
     if(isFinal){ this.speak(this.fmt(t.voicePraiseAll,{name:nm})); return; }
     // Short praise only: the next dose is shown on screen, not spoken (decision 2026-11-25)
     this.speak(this.fmt(t.voicePraise,{name:nm})); }
@@ -1724,7 +1728,7 @@ class Component extends DCLogic {
     if(st===1){ let code=null; if(has('рус','russ')) code='ru'; else if(has('немец','deutsch','german')) code='de'; else if(has('англ','english','englisch')) code='en'; if(!code) return miss(); this.pickLang(code); const t2=this.dict()[code]; const msg=this.fmt(t2.srFilled,{value:this.langName(code)}); this.setState({srResult:msg, srErr:''}); setTimeout(()=>this.speak(msg),60); return; }
     if(st===2){ if(digits.length>=7){ const v=plus+digits; return filled(v,{phoneReg:v, phoneRegErr:''}); } return miss(); }
     if(st===3){ if(digits.length>=4){ const v=digits.slice(0,4); return filled(v,{code:v, codeErr:''}); } return miss(); }
-    if(st===4){ const n=cap(clean(raw.replace(/[\d]/g,''))); if(!n) return miss(); return filled(n,{firstName:n, regNameErr:false}); }
+    if(st===4){ const n=cap(clean(raw.replace(/[\d]/g,''))); if(!n) return miss(); return filled(n,{firstName:n, nameByUser:true, regNameErr:false}); }
     if(st===5){ if(has(...NEXT)) return go(()=>this.welcomeContinue()); return miss(); }
     if(st===7){ const RELS=[['Daughter',['дочь','дочка','дочер','daughter','tochter']],['Son',['сын',' son ','sohn']],['Spouse',['муж','жена','супруг','husband','wife','spouse','ehemann','ehefrau','partner']],['Friend',['друг','подруг','friend','freund']],['Caregiver',['сиделк','опекун','caregiver','carer','pfleger','betreuer']]];
       let rel=''; let rest=raw; for(const [k,ws] of RELS){ if(ws.some(w=>txt.includes(w))){ rel=k; ws.forEach(w=>{ rest=rest.replace(new RegExp(w.trim()+'\\S*','gi'),' '); }); break; } }
@@ -1797,8 +1801,8 @@ class Component extends DCLogic {
     return {prompt, actions, instr};
   }
   speakAnnaGuide(){
-    const s=this.state; const t=this.tr(); const name=s.firstName.trim();
-    if(s.phase==='onboarding' && s.obStep===6){ const text=this.fmt(t.annaIntroScript,{name}); this._lastAnnaSpeech=text; this.speak(text); return; }
+    const s=this.state; const t=this.tr(); const name=this.voiceName();
+    if(s.phase==='onboarding' && s.obStep===6){ const text=this.fmtName(t.annaIntroScript,name); this._lastAnnaSpeech=text; this.speak(text); return; }
     const ac=this.annaContext();
     const parts=[]; if(name) parts.push(this.fmt(t.annaVoiceGreet,{name})); parts.push(ac.prompt); if(ac.instr) parts.push(ac.instr);
     const text=parts.join(' '); this._lastAnnaSpeech=text; this.speak(text);
