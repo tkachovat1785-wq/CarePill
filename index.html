@@ -1467,7 +1467,7 @@ class Component extends DCLogic {
   // ---- log out ----
   askLogout(){ this.track('logout_requested'); this.setState({overlay:'logout'}); }
   cancelLogout(){ this.setState({overlay:null}); }
-  confirmLogout(){ this.track('logout_confirmed');
+  confirmLogout(){ this.track('logout_confirmed'); { const nm=this.voiceName(); if(nm) this._userName=nm; }
     this._snzPending=false; this._idleSince=0; ['_snz','_remVoice','_t','_succ','_b','_st','_autoRem','_volPrev','_sysPrev','_chimePrev','_chimeVoice','_vw'].forEach(k=>clearTimeout(this[k]));
     this.cancelIntro(); this.abortListen(); this.stopSpeak(); this._lastAnnaSpeech=null; this._callOrigin=null; this._warnSource=null;
     try{ localStorage.removeItem('carepill_lang'); sessionStorage.removeItem('carepill_lang'); }catch(e){}
@@ -1487,7 +1487,7 @@ class Component extends DCLogic {
   loginVerify(){ const err=this.loginValidateCode(); if(err){ this.setState({loginCodeErr:err}); return; } this.loginComplete(); }
   loginComplete(){ this._restoring=true; this.setState({
     loginCodeErr:'', userType:'existing', phase:'app', tab:'pillbox', overlay:null, hist:[],
-    firstName:'Maria', lastName:'Garcia', taken:{asp:true},
+    firstName:this._userName||'Maria', lastName:this._userName?'':'Garcia', nameByUser:!!this._userName, taken:{asp:true},
     contacts:[{name:'Sarah Johnson', rel:'Caregiver', phone:'+1 (555) 123-4567', initials:'SJ'}]
   }); this.armAutoReminder(); }
 
@@ -1517,7 +1517,11 @@ class Component extends DCLogic {
 
   ob(n){ this.setState({obStep:n, relOpen:false}); }
   obBack(){ this.setState(s=>({obStep:Math.max(1,s.obStep-1), relOpen:false})); }
-  field(k){ return e=>this.setState({[k]:e.target.value}); }
+  field(k){ return e=>this.setState(k==='firstName'?{firstName:e.target.value, nameByUser:true}:{[k]:e.target.value}); }
+  // ---- the name Anna says: only a name the user typed (onboarding, voice input or Profile). The demo account name of Log In is never spoken. ----
+  voiceName(){ const s=this.state; if(s.nameByUser===false) return ''; return String(s.firstName||'').replace(/\s+/g,' ').trim(); }
+  // fill {name} in a spoken template; with no name, drop it together with its comma/space so the sentence stays correct
+  fmtName(tpl,name){ if(name) return this.fmt(tpl,{name}); return String(tpl||'').replace(/,\s*\{name\}/g,'').replace(/\{name\}\s*,\s*/g,'').replace(/\s*\{name\}/g,'').replace(/^\s+/,''); }
   num(k){ return e=>this.setState({[k]:Number(e.target.value)}); }
 
   toggleRel(){ this.setState(s=>({relOpen:!s.relOpen})); }
@@ -1591,31 +1595,79 @@ class Component extends DCLogic {
   openReminder(d){ this.setState({overlay:'reminder', reminderMed:d}); }
   // ---- audible + voice guidance for the reminder (uses the platform's built-in speech) ----
   pickVoice(loc){ try{ const sy=window.speechSynthesis; if(!sy) return null; const voices=sy.getVoices()||[]; if(!voices.length) return null;
-    const base=String(loc||'en-US').split('-')[0].toLowerCase();
+    const want=String(loc||'en-US').toLowerCase(); const base=want.split('-')[0];
     const norm=v=>String(v.lang||'').toLowerCase().replace('_','-');
-    const inLang=voices.filter(v=>norm(v).startsWith(base));
-    const pool=inLang; if(!pool.length) return null;
-    const femaleHints=['female','femme','weiblich','женщ','женс','anna','анна','milena','katja','vicki','vicky','petra','петра','samantha','victoria','amelie','amélie','helena','marlene','alena','tatyana','tatiana','татьяна','yelena','елена','irina','ирина','paulina','milena','zira','hedda','google'];
-    const maleHints=['male','homme','männlich','мужс','daniel','yuri','юрий','aleksandr','александр','markus','stefan','reed','fred','thomas','pavel','павел'];
-    const score=v=>{ const n=String(v.name||'').toLowerCase(); let sc=0; if(maleHints.some(h=>n.includes(h))) sc-=8; if(femaleHints.some(h=>n.includes(h))) sc+=5; if(/female/.test(n)) sc+=4; if(/natural|neural|premium|enhanced|siri/.test(n)) sc+=7; if(/google/.test(n)) sc+=2; if(/compact|espeak/.test(n)) sc-=6; if(v.localService===false) sc+=1; return sc; };
+    const pool=voices.filter(v=>norm(v).startsWith(base)); if(!pool.length) return null;
+    // Rank voices: native region first, then the device's high-quality voices (iOS/macOS "Premium"/"Enhanced", Edge "Natural"/"Online"), a warm female voice,
+    // and never the joke/robot voices (iOS "Eloquence": Grandma, Rocko, Shelley ...; eSpeak; compact).
+    const FEMALE=['anna','milena','katya','katja','petra','helena','marlene','vicki','vicky','hedda','amala','svetlana','dariya','darya','irina','alena','tatyana','tatiana','yelena','elena','ekaterina','paulina','zira','samantha','victoria','ava','allison','susan','zoe','karen','moira','tessa','amelie','amélie','анна','милена','катя','светлана','ирина','елена','татьяна','петра'];
+    const MALE=['male','männlich','мужской','daniel','yuri','yury','aleksandr','alexander','dmitry','dmitri','pavel','markus','stefan','conrad','killian','reed','fred','thomas','viktor','martin','maxim','alex','юрий','александр','дмитрий','павел','максим'];
+    const NOVELTY=['grandma','grandpa','rocko','shelley','flo','eddy','sandy','albert','bahh','bells','boing','bubbles','cellos','jester','organ','superstar','trinoids','whisper','wobble','zarvox','junior','kathy','ralph','bad','good','eloquence','novelty'];
+    const score=v=>{ const n=(String(v.name||'')+' '+String(v.voiceURI||'')).toLowerCase(); const w=n.split(/[^a-zа-яёäöüß]+/); let sc=0;
+      if(norm(v)===want) sc+=3;
+      if(/premium/.test(n)) sc+=12; else if(/enhanced|verbessert|улучш/.test(n)) sc+=10; else if(/natural|neural|online/.test(n)) sc+=9; else if(/siri/.test(n)) sc+=8;
+      if(/google/.test(n)) sc+=6;
+      if(/female|weiblich|женск/.test(n)||w.some(x=>FEMALE.includes(x))) sc+=5;
+      if(w.some(x=>MALE.includes(x))) sc-=8;
+      if(w.some(x=>NOVELTY.includes(x))) sc-=20;
+      if(/compact|espeak|desktop/.test(n)) sc-=4;
+      return sc; };
     return pool.slice().sort((a,b)=>score(b)-score(a))[0] || pool[0] || null;
   }catch(e){ return null; } }
-  // one shared Anna voice for every flow + language: calm pace, warm pitch, sentence-by-sentence with natural pauses
-  voiceRate(){ return 0.88; } voicePitch(){ return 1.05; }
+  // one shared Anna voice for every flow. EN keeps its tuning; DE/RU use the voice's own natural pitch (pitch shifting makes good voices sound artificial) and a calm pace for 60+
+  voiceRate(){ const l=this.state.language; return l==='de'?0.9:l==='ru'?0.92:0.88; } voicePitch(){ const l=this.state.language; return (l==='de'||l==='ru')?1:1.05; }
+  // ---- DE/RU: turn screen text into text that is easy to say (brand name, units, times, fractions, English demo names). EN is spoken as written. ----
+  plRu(n,one,few,many){ const x=Math.abs(n)%100, y=x%10; if(x>10&&x<20) return many; if(y===1) return one; if(y>=2&&y<=4) return few; return many; }
+  sayClock(h,m){ const l=this.state.language; h=((h%24)+24)%24; m=m||0;
+    if(l==='ru'){ if(m) return h+':'+String(m).padStart(2,'0'); const h12=h%12||12; const part=h>=4&&h<12?'утра':h>=12&&h<17?'дня':h>=17?'вечера':'ночи'; return h12+' '+this.plRu(h12,'час','часа','часов')+' '+part; }
+    if(l==='de') return m?(h+' Uhr '+m):(h+' Uhr');
+    return h+':'+String(m).padStart(2,'0'); }
+  sayTime(time, period){ const mm=String(time||'').match(/(\d{1,2})[:.](\d{2})/); if(!mm) return [time,period].filter(Boolean).join(' '); let h=parseInt(mm[1],10); const m=parseInt(mm[2],10); const p=String(period||'').toUpperCase(); if(p==='PM'&&h!==12) h+=12; if(p==='AM'&&h===12) h=0; return this.sayClock(h,m); }
+  sayAmount(num, unit){ const l=this.state.language; const n=parseFloat(String(num).replace(',','.')); const frac=!Number.isInteger(n); const ns=String(num).replace('.',',');
+    const u=String(unit||'').toLowerCase();
+    if(l==='ru'){ const F={mg:['миллиграмм','миллиграмма','миллиграммов'],ml:['миллилитр','миллилитра','миллилитров'],g:['грамм','грамма','граммов'],tablet:['таблетка','таблетки','таблеток'],capsule:['капсула','капсулы','капсул']};
+      const k=/^(mg|мг)$/.test(u)?'mg':/^(ml|мл)$/.test(u)?'ml':/^(g|г)$/.test(u)?'g':/^(tab|таб)/.test(u)?'tablet':/^(cap|кап)/.test(u)?'capsule':null; if(!k) return num+' '+unit;
+      const f=F[k]; const word=frac?f[1]:this.plRu(n,f[0],f[1],f[2]); const fem=(k==='tablet'||k==='capsule'); const nn=(!frac&&fem&&n===1)?'одна':(!frac&&fem&&n===2)?'две':ns; return nn+' '+word; }
+    if(l==='de'){ const k=/^mg$/.test(u)?'Milligramm':/^ml$/.test(u)?'Milliliter':/^g$/.test(u)?'Gramm':/^tab/.test(u)?(n===1?'Tablette':'Tabletten'):/^(cap|kap)/.test(u)?(n===1?'Kapsel':'Kapseln'):null; if(!k) return num+' '+unit; const nn=(n===1&&/^(tab|cap|kap)/.test(u))?'eine':ns; return nn+' '+k; }
+    return num+' '+unit; }
+  sayDigits(v){ const l=this.state.language; if(l!=='de'&&l!=='ru') return v; const plus=/^\s*\+/.test(v)?(l==='ru'?'плюс ':'plus '):''; const groups=String(v).replace(/^\s*\+/,'').split(/[\s()\-]+/).filter(Boolean); const parts=[]; groups.forEach(g=>{ if(g.length<=4){ parts.push(g.split('').join(' ')); return; } const cs=[]; for(let i=0;i<g.length;i+=3) cs.push(g.slice(i,i+3)); if(cs.length>1&&cs[cs.length-1].length===1) cs[cs.length-2]+=cs.pop(); cs.forEach(c=>parts.push(c.split('').join(' '))); }); return plus+parts.join(', '); }
+  forSpeech(text){ const l=this.state.language; let x=String(text||''); if(l!=='de'&&l!=='ru') return x; const R=(l==='ru');
+    x=x.replace(/CarePill/g, R?'Кэр Пилл':'Kehr Pill');
+    x=x.replace(R?/ИИ-(?=[а-яё])/g:/KI-(?=[A-Za-zÄÖÜäöü])/g,'');
+    if(R){ x=x.replace(/\bSMS\b/g,'СМС').replace(/Супруг\(а\)/g,'Супруг').replace(/½\s*стакана/g,'полстакана').replace(/\b1 стакан(?![а-яё])/g,'один стакан').replace(/\b2 стакана(?![а-яё])/g,'два стакана').replace(/\bMetformin\b/g,'Метформин').replace(/\bAspirin\b/g,'Аспирин').replace(/\bLisinopril\b/g,'Лизиноприл'); }
+    else { x=x.replace(/Liebe\(r\)\s*/g,'').replace(/(\w)\/in\b/g,'$1').replace(/\b4-stellig/g,'vierstellig').replace(/½\s*Glas/g,'ein halbes Glas').replace(/\b1 Glas\b/g,'ein Glas').replace(/\b2 Gläser\b/g,'zwei Gläser'); }
+    x=x.replace(/\b(\d{1,2}):(\d{2})\s*(AM|PM)\b/g,(m0,h,mm,p)=>this.sayTime(h+':'+mm,p)).replace(/\b(\d{1,2}):(\d{2})\b/g,(m0,h,mm)=>this.sayClock(parseInt(h,10),parseInt(mm,10)));
+    x=x.replace(/(\d+(?:[.,]\d+)?)\s*(mg|ml|g|tablets?|capsules?|мг|мл)(?![A-Za-zА-Яа-яё])/gi,(m0,n,u)=>this.sayAmount(n,u));
+    return x; }
+  // DE/RU: speak sentence by sentence (natural pauses, and Chrome cuts off single utterances longer than ~15 s); a long sentence is also split at a dash
+  speechChunks(text){ const l=this.state.language; const out=[]; String(text).split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean).forEach(c=>{ if((l==='de'||l==='ru')&&c.length>110){ c.split(/\s+[—–]\s+/).forEach(y=>{ y=y.trim(); if(y) out.push(y); }); } else out.push(c); }); return out; }
   speak(text, vol){ try{ const sy=window.speechSynthesis; if(!sy||!text||typeof SpeechSynthesisUtterance==='undefined') return; sy.cancel(); const loc=this.locale(); const lang=this.state.language; const volume=(vol!=null?Math.max(0,Math.min(1,vol)):(this.state.annaVol/100)); const tok=this._speakTok||0;
     this.withVoices(()=>{ if(this.state.language!==lang || tok!==(this._speakTok||0)) return; const v=this.pickVoice(loc); if(!v) return;
-      String(text).split(/(?<=[.!?…])\s+/).map(x=>x.trim()).filter(Boolean).forEach(c=>{ const u=new SpeechSynthesisUtterance(c); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=volume; sy.speak(u); }); }); }catch(e){} }
+      this._utts=[]; this.speechChunks(this.forSpeech(text)).forEach(c=>{ const u=new SpeechSynthesisUtterance(c); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=volume; this._utts.push(u); sy.speak(u); }); }); }catch(e){} }
   stopSpeak(){ this._speakTok=(this._speakTok||0)+1; clearTimeout(this._remVoice); clearTimeout(this._chimeVoice); try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
-  speakReminder(d, kind){ const m=this.liveDose(d||this.state.reminderMed); if(!m) return; const t=this.tr(); const person=this.state.firstName.trim()||'';
+  speakReminder(d, kind){ const m=this.liveDose(d||this.state.reminderMed); if(!m) return; const t=this.tr(); const person=this.voiceName();
     const op=kind==='snoozeFollowup'?t.voiceSnoozeOpener:kind==='repeat'?t.voiceRepeatOpener:(kind===true||kind==='missed')?t.voiceMissedOpener:t.voiceOpener;
+    if(this.state.language==='de'||this.state.language==='ru'){ this.speak(this.sayReminderText(m, kind, person)); return; }
     const time=[m.time,m.period].filter(Boolean).join(' ');
-    const parts=[this.fmt(op,{person, med:m.name, dose:m.dose||'', time}).replace(/^\s*,\s*/,'').replace(/^(\S+?)!\s*/,(x,w)=>person?x:'')];
+    const parts=[this.fmt(op,{person, med:m.name, dose:m.dose||'', time}).replace(/\s+!/g,'!').replace(/^\s*,\s*/,'').replace(/^(\S+?)!\s*/,(x,w)=>person?x:'')].map(x=>x.charAt(0).toUpperCase()+x.slice(1));
     let instr=this.voiceInstrText(m); if(instr){ instr=instr.charAt(0).toLowerCase()+instr.slice(1); parts.push(this.fmt(t.voiceInstr,{instr})); }
     parts.push(t.voiceCloser);
     this.speak(parts.join(' ')); }
+  // ---- DE/RU reminder, written for the ear: polite form, short sentences, units and times said in words ----
+  sayReminderText(m, kind, person){ const t=this.tr();
+    const tpl=kind==='snoozeFollowup'?t.sayRemSnooze:kind==='repeat'?t.sayRemRepeat:(kind===true||kind==='missed')?t.sayRemMissed:t.sayRemNew;
+    const dm=String(m.dose||'').match(/^\s*(\d+(?:[.,]\d+)?)\s*(\S+)/); const dose=dm?this.sayAmount(dm[1],dm[2]):(m.dose||'');
+    let first=this.fmt(tpl,{p:person?person+', ':'', pn:person?' '+person:'', med:m.name, dose, time:this.sayTime(m.time,m.period)}).replace(/,\s*\./g,'.').trim();
+    first=first.charAt(0).toUpperCase()+first.slice(1);
+    const parts=[first]; const meals=[]; const notes=[]; let water='';
+    this.instrParts(m).forEach(pt=>{ if(pt.kind==='water') water=m.water; else if(pt.kind==='note') notes.push(pt.text); else meals.push(pt.text.charAt(0).toLowerCase()+pt.text.slice(1)); });
+    if(meals.length){ const how=meals.length>1?meals.slice(0,-1).join(', ')+' '+(t.voiceAnd||'und')+' '+meals[meals.length-1]:meals[0]; parts.push(this.fmt(t.sayTakeHow,{how})); }
+    if(water){ const w={half:t.sayWaterHalf, one:t.sayWaterOne, two:t.sayWaterTwo}[water]; if(w) parts.push(w); }
+    notes.forEach(n=>{ n=String(n).trim(); if(n) parts.push(/[.!?]$/.test(n)?n:n+'.'); });
+    parts.push(t.voiceCloser); return parts.join(' '); }
   // ---- live voice preview while dragging the Anna's-voice volume slider (debounced; uses the current language + chosen level) ----
   onAnnaVol(e){ const v=Number(e.target.value); this.setState({annaVol:v}); clearTimeout(this._volPrev); this._volPrev=setTimeout(()=>{ this.speak(this.tr().voicePreview, v/100); }, 220); }
-  playAnnaTrialGreeting(){ const t=this.tr(); const name=this.state.firstName.trim(); this.speak(this.fmt(t.annaTrialGreeting,{name: name||t.medication})); }
+  playAnnaTrialGreeting(){ const t=this.tr(); const name=this.voiceName(); this.speak(this.fmtName(t.annaTrialGreeting,name)); }
   // ---- synthesized audio cues (Web Audio) — the app ships no sound files, so system + reminder cues are generated ----
   audioCtx(){ try{ if(!this._ac){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; this._ac=new AC(); } if(this._ac.state==='suspended'){ this._ac.resume(); } return this._ac; }catch(e){ return null; } }
   tone(freq, start, dur, vol, type){ const ac=this._ac; if(!ac) return; const o=ac.createOscillator(); const g=ac.createGain(); o.type=type||'sine'; o.frequency.value=freq; const t0=ac.currentTime+start; const peak=Math.max(0.0001, Math.min(1,vol)*0.85); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+dur+0.05); }
@@ -1636,7 +1688,7 @@ class Component extends DCLogic {
     clearTimeout(this._remVoice); this._lastAlert=Date.now(); this._quietSince=0;
     this.setState({taken:after, overlay: isFinal?'takenFinal':'success'}, ()=>this.speakPraise(isFinal)); }
   // ---- Anna's reaction once a dose is confirmed: short praise only (a bigger praise when the day is complete); the next dose is shown on screen ----
-  speakPraise(isFinal){ const t=this.tr(); const person=this.state.firstName.trim(); const nm=person?(', '+person):'';
+  speakPraise(isFinal){ const t=this.tr(); const person=this.voiceName(); const nm=person?(', '+person):'';
     if(isFinal){ this.speak(this.fmt(t.voicePraiseAll,{name:nm})); return; }
     // Short praise only: the next dose is shown on screen, not spoken (decision 2026-11-25)
     this.speak(this.fmt(t.voicePraise,{name:nm})); }
@@ -1661,7 +1713,7 @@ class Component extends DCLogic {
   abortListen(){ this._srTok=(this._srTok||0)+1; const r=this._sr; this._sr=null; try{ if(r) r.abort(); }catch(e){} if(this.state.srListening) this.setState({srListening:false}); }
   // ---- turn a recognised phrase into an action for the CURRENT screen. Field values are only filled in — the user reviews them and taps the screen's own button to save. ----
   handleVoice(raw){ const s=this.state; const t=this.tr(); const txt=' '+raw.toLowerCase().replace(/[.,!?«»"]/g,' ')+' '; const has=(...w)=>w.some(x=>txt.includes(x));
-    const filled=(val, patch)=>{ this.setState({...(patch||{}), srResult:this.fmt(t.srFilled,{value:val}), srErr:''}); this.speak(this.fmt(t.srFilled,{value:val})); };
+    const filled=(val, patch)=>{ this.setState({...(patch||{}), srResult:this.fmt(t.srFilled,{value:val}), srErr:''}); const sv=String(val).split(', ').map(x=>/^\+?[\d\s()\-]{4,}$/.test(x)?this.sayDigits(x):x).join(', '); this.speak(this.fmt(t.srFilled,{value:sv})); };
     const miss=()=>{ this.setState({srErr:t.srNotUnderstood, srResult:''}); this.speak(t.srNotUnderstood); };
     const go=fn=>{ this.abortListen(); this.stopSpeak(); this.setState({overlay:null}, fn); };
     const digits=raw.replace(/[^\d]/g,''); const plus=/^\s*(\+|плюс|plus)/i.test(raw)?'+':'';
@@ -1676,7 +1728,7 @@ class Component extends DCLogic {
     if(st===1){ let code=null; if(has('рус','russ')) code='ru'; else if(has('немец','deutsch','german')) code='de'; else if(has('англ','english','englisch')) code='en'; if(!code) return miss(); this.pickLang(code); const t2=this.dict()[code]; const msg=this.fmt(t2.srFilled,{value:this.langName(code)}); this.setState({srResult:msg, srErr:''}); setTimeout(()=>this.speak(msg),60); return; }
     if(st===2){ if(digits.length>=7){ const v=plus+digits; return filled(v,{phoneReg:v, phoneRegErr:''}); } return miss(); }
     if(st===3){ if(digits.length>=4){ const v=digits.slice(0,4); return filled(v,{code:v, codeErr:''}); } return miss(); }
-    if(st===4){ const n=cap(clean(raw.replace(/[\d]/g,''))); if(!n) return miss(); return filled(n,{firstName:n, regNameErr:false}); }
+    if(st===4){ const n=cap(clean(raw.replace(/[\d]/g,''))); if(!n) return miss(); return filled(n,{firstName:n, nameByUser:true, regNameErr:false}); }
     if(st===5){ if(has(...NEXT)) return go(()=>this.welcomeContinue()); return miss(); }
     if(st===7){ const RELS=[['Daughter',['дочь','дочка','дочер','daughter','tochter']],['Son',['сын',' son ','sohn']],['Spouse',['муж','жена','супруг','husband','wife','spouse','ehemann','ehefrau','partner']],['Friend',['друг','подруг','friend','freund']],['Caregiver',['сиделк','опекун','caregiver','carer','pfleger','betreuer']]];
       let rel=''; let rest=raw; for(const [k,ws] of RELS){ if(ws.some(w=>txt.includes(w))){ rel=k; ws.forEach(w=>{ rest=rest.replace(new RegExp(w.trim()+'\\S*','gi'),' '); }); break; } }
@@ -1707,10 +1759,11 @@ class Component extends DCLogic {
       const s=this.state; if(tok!==this._introTok || s.language!==lang || s.phase!=='onboarding' || s.obStep!==6 || !s.introOpen) return;
       let sy=null; try{ sy=window.speechSynthesis; }catch(e){} const loc=this.locale(); const v=sy?this.pickVoice(loc):null;
       if(!sy || !v || typeof SpeechSynthesisUtterance==='undefined'){ this.setState({introAudioErr:true, introDone:true}); return; }
-      try{ const u=new SpeechSynthesisUtterance(this.introLines().join(' ')); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=Math.max(0,Math.min(1,s.annaVol/100));
-        u.onend=()=>{ if(tok===this._introTok) this.setState({introSpeaking:false, introDone:true}); };
-        u.onerror=e=>{ if(tok!==this._introTok) return; const benign=e&&(e.error==='interrupted'||e.error==='canceled'); this.setState({introSpeaking:false, introDone:true, introAudioErr:!benign}); };
-        sy.cancel(); sy.speak(u); this.setState({introSpeaking:true});
+      try{ const natural=(lang==='de'||lang==='ru'); const chunks=natural?this.speechChunks(this.forSpeech(this.introLines().join(' '))):[this.introLines().join(' ')]; const us=[];
+        chunks.forEach(c=>{ const u=new SpeechSynthesisUtterance(c); u.lang=loc; u.voice=v; u.rate=this.voiceRate(); u.pitch=this.voicePitch(); u.volume=Math.max(0,Math.min(1,s.annaVol/100)); us.push(u); });
+        const last=us[us.length-1]; last.onend=()=>{ if(tok===this._introTok) this.setState({introSpeaking:false, introDone:true}); };
+        us.forEach(u=>{ u.onerror=e=>{ if(tok!==this._introTok) return; const benign=e&&(e.error==='interrupted'||e.error==='canceled'); this.setState({introSpeaking:false, introDone:true, introAudioErr:!benign}); }; });
+        this._utts=us; sy.cancel(); us.forEach(u=>sy.speak(u)); this.setState({introSpeaking:true});
       }catch(e){ this.setState({introSpeaking:false, introDone:true, introAudioErr:true}); }
     })); }
   cancelIntro(){ this._introTok=(this._introTok||0)+1; clearTimeout(this._vw); this.stopSpeak(); }
@@ -1748,8 +1801,8 @@ class Component extends DCLogic {
     return {prompt, actions, instr};
   }
   speakAnnaGuide(){
-    const s=this.state; const t=this.tr(); const name=s.firstName.trim();
-    if(s.phase==='onboarding' && s.obStep===6){ const text=this.fmt(t.annaIntroScript,{name}); this._lastAnnaSpeech=text; this.speak(text); return; }
+    const s=this.state; const t=this.tr(); const name=this.voiceName();
+    if(s.phase==='onboarding' && s.obStep===6){ const text=this.fmtName(t.annaIntroScript,name); this._lastAnnaSpeech=text; this.speak(text); return; }
     const ac=this.annaContext();
     const parts=[]; if(name) parts.push(this.fmt(t.annaVoiceGreet,{name})); parts.push(ac.prompt); if(ac.instr) parts.push(ac.instr);
     const text=parts.join(' '); this._lastAnnaSpeech=text; this.speak(text);
@@ -1957,6 +2010,7 @@ class Component extends DCLogic {
       dash:"\u2014"
     };
     const de={
+      sayRemNew:"Hallo{pn}! Es ist {time}. Zeit für Ihr Medikament: {med}, {dose}.", sayRemRepeat:"{p}ich erinnere Sie noch einmal. Bitte nehmen Sie jetzt {med}, {dose}. Geplant war {time}.", sayRemMissed:"{p}Sie haben {med} noch nicht genommen. {dose}, geplant für {time}.", sayRemSnooze:"{p}die fünfzehn Minuten sind um. Bitte nehmen Sie jetzt {med}, {dose}.", sayTakeHow:"Bitte {how} einnehmen.", sayWaterHalf:"Trinken Sie dazu ein halbes Glas Wasser.", sayWaterOne:"Trinken Sie dazu ein Glas Wasser.", sayWaterTwo:"Trinken Sie dazu zwei Gläser Wasser.",
       tagline:"Ihr täglicher Tabletten-Begleiter",
       authTagline:"Ihr täglicher Tabletten-Begleiter. Lassen Sie uns alles einrichten.",
       signUp:"Registrieren", logIn:"Anmelden",
@@ -2008,7 +2062,7 @@ class Component extends DCLogic {
       hintMedDone:"Ihr Medikament ist hinzugefügt.", hintMedDoneVoice:"Sagen Sie „Weiteres“ für ein weiteres Medikament oder „Fertig“.",
       hintProfile:"Hier können Sie Namen, Sprache, Textgröße und Ton ändern.", hintAppVoice:"Sie können sagen: „Medikament hinzufügen“, „Heutiger Plan“ oder „Anrufen“.",
       annaIntro:"Hallo! Ich bin Anna — ich kann Ihre Medikamente hinzufügen, Fragen beantworten oder im Notfall helfen.",
-      annaIntroTitle:"Das ist Anna", annaMeetTitle:"Lernen Sie Ihre Sprachassistentin Anna kennen", annaMeetSubtitle:"Immer wenn Sie diese Schaltfläche sehen, können Sie Anna um Hilfe bitten.", annaIntroPrompt:"Ich erinnere Sie an Ihre Medikamente, füge Notfallkontakte hinzu und beantworte Ihre Fragen.", annaIntroScript:"Liebe(r) {name}, lassen Sie uns einander begrüßen. Sagen Sie mir Hallo. Gut gemacht! Hallo, {name}! Was möchten Sie zuerst tun — ein Medikament hinzufügen, den heutigen Plan ansehen, oder Ihren Notfallkontakt anrufen? Sie können selbst auf die Schaltflächen tippen, um direkt dorthin zu gelangen, oder sagen Sie mir einfach, was wir zuerst einrichten — Ihren Notfallkontakt oder die Medikamente, die Sie einnehmen werden — und ich bringe Sie dorthin.", annaTapHint:"Tippen Sie oben auf das Mikrofon, um mit mir zu sprechen.", annaHowItWorks:"Wenn Sie meine blaue Schaltfläche sehen, tippen Sie einfach darauf und sagen Sie mir, was Sie brauchen — zum Beispiel ein Medikament hinzufügen oder Hilfe rufen.", annaTryGreeting:"Anna Hallo sagen lassen", annaTryGreetingHint:"Jetzt ausprobieren", annaTrialGreeting:"Hallo {name}! Ich bin Anna. Ich erinnere Sie, wenn es Zeit für Ihr Medikament ist, und bin immer da — tippen Sie einfach auf meine Schaltfläche.",
+      annaIntroTitle:"Das ist Anna", annaMeetTitle:"Lernen Sie Ihre Sprachassistentin Anna kennen", annaMeetSubtitle:"Immer wenn Sie diese Schaltfläche sehen, können Sie Anna um Hilfe bitten.", annaIntroPrompt:"Ich erinnere Sie an Ihre Medikamente, füge Notfallkontakte hinzu und beantworte Ihre Fragen.", annaIntroScript:"Hallo {name}! Schön, dass Sie da sind. Was möchten Sie zuerst tun? Ein Medikament hinzufügen, den heutigen Plan ansehen, oder Ihren Notfallkontakt anrufen? Tippen Sie einfach auf eine Taste. Oder sagen Sie es mir, und ich bringe Sie dorthin.", annaTapHint:"Tippen Sie oben auf das Mikrofon, um mit mir zu sprechen.", annaHowItWorks:"Wenn Sie meine blaue Schaltfläche sehen, tippen Sie einfach darauf und sagen Sie mir, was Sie brauchen — zum Beispiel ein Medikament hinzufügen oder Hilfe rufen.", annaTryGreeting:"Anna Hallo sagen lassen", annaTryGreetingHint:"Jetzt ausprobieren", annaTrialGreeting:"Hallo {name}! Ich bin Anna. Ich erinnere Sie, wenn es Zeit für Ihr Medikament ist. Und ich bin immer für Sie da. Tippen Sie einfach auf meine Taste.",
       medStep1:"Medikament · Schritt 1 von 5", medication:"Medikament",
       whatMed:"Welches Medikament nehmen Sie?", medicationName:"Name des Medikaments",
       medNamePh:"Beispiel: Aspirin",
@@ -2058,7 +2112,7 @@ class Component extends DCLogic {
       account:"Konto", logOut:"Abmelden",
       navPillbox:"Pillenbox", navCall:"Anruf", navProfile:"Profil",
       timeForMed:"⏰ Zeit für Ihr Medikament", takeMedBtn:"Medikament einnehmen", snooze15:"In 15 Minuten erinnern", snoozeShort:"Erinnern", skipDose:"Überspringen",
-      voiceReminderTitle:"Spracherinnerung läuft", voiceReminderHint:"Zum Wiederholen tippen", voiceReminderLabel:"Spracherinnerung läuft. Zum Wiederholen tippen.", voicePrompt:"Es ist Zeit für Ihr {name}. {dose}.", voicePraise:"Gut gemacht{name}! Super.", voiceNextDose:"Deine nächste Einnahme: {med}, {dose}, um {time}.", voicePraiseAll:"Großartig{name}! Du hast heute alle Medikamente genommen. Ich bin stolz auf dich!", voiceOpener:"Hallo {person}! Es ist {time} – Zeit für dein {med}, {dose}.", voiceRepeatOpener:"{person}, nur eine kleine Erinnerung: Du hast dein {med} noch nicht genommen. {dose}, um {time}.", voiceSnoozeOpener:"{person}, 15 Minuten sind schon um – Zeit für dein {med}, {dose}, um {time}.", voiceMissedOpener:"{person}, du hast dein {med} wohl noch nicht genommen – {dose}, fällig um {time}.", voiceInstr:"Denk daran: {instr}.", voiceCloser:"Ich bin für dich da, wenn du mich brauchst!", voiceAnd:"und", voicePreview:"Hallo, ich bin Anna. So wird Ihre Erinnerungsstimme klingen.",
+      voiceReminderTitle:"Spracherinnerung läuft", voiceReminderHint:"Zum Wiederholen tippen", voiceReminderLabel:"Spracherinnerung läuft. Zum Wiederholen tippen.", voicePrompt:"Es ist Zeit für Ihr {name}. {dose}.", voicePraise:"Sehr gut{name}! Gut gemacht.", voiceNextDose:"Deine nächste Einnahme: {med}, {dose}, um {time}.", voicePraiseAll:"Wunderbar{name}! Sie haben heute alle Medikamente genommen. Ich bin stolz auf Sie.", voiceOpener:"Hallo {person}! Es ist {time} – Zeit für dein {med}, {dose}.", voiceRepeatOpener:"{person}, nur eine kleine Erinnerung: Du hast dein {med} noch nicht genommen. {dose}, um {time}.", voiceSnoozeOpener:"{person}, 15 Minuten sind schon um – Zeit für dein {med}, {dose}, um {time}.", voiceMissedOpener:"{person}, du hast dein {med} wohl noch nicht genommen – {dose}, fällig um {time}.", voiceInstr:"Denk daran: {instr}.", voiceCloser:"Ich bin für Sie da, wenn Sie mich brauchen.", voiceAnd:"und", voicePreview:"Hallo, ich bin Anna. So wird Ihre Erinnerungsstimme klingen.",
       takenTitle:"Eingenommen!", allDoneTitle:"Für heute alles erledigt!",
       takenBody:"{name} als eingenommen markiert.",
       allDoneBody:"{name} eingenommen — alle Dosen erledigt. Gut gemacht.",
@@ -2072,7 +2126,7 @@ class Component extends DCLogic {
       annaHowMuch:"Wie viel nehmen Sie?", annaSet100:"100 mg einstellen",
       annaHowOften:"Wie oft nehmen Sie es?", annaChooseOnce:"\u201eEinmal täglich\u201c wählen",
       annaWhenRemind:"Wann soll ich Sie erinnern?", annaSet8:"8:00 Uhr einstellen", annaViewSchedule:"Heutigen Plan ansehen", annaHowTaken:"Sagen Sie mir, wie dieses Medikament eingenommen werden soll?",
-      annaVoiceGreet:"Liebe(r) {name},", annaVoiceWhatDo:"Sagen Sie mir, was Sie tun möchten.", annaVoiceMedName:"Bitte nennen Sie den Namen des Medikaments, das Sie einnehmen.", annaVoiceDose:"Bitte sagen Sie mir die Dosis, die Sie einnehmen.", annaVoiceFreq:"Bitte sagen Sie mir, wie oft Sie es einnehmen.", annaVoiceTime:"Bitte sagen Sie mir, wann ich Sie erinnern soll.", annaVoiceIntake:"Bitte sagen Sie mir, ob Sie es mit Wasser oder vor dem Essen einnehmen.", annaVoiceContact:"Sagen Sie mir, wen ich anrufen soll, oder tippen Sie auf Schließen, um es selbst einzugeben.", annaVoiceApp:"Sie können mich bitten, ein Medikament hinzuzufügen, den heutigen Plan anzusehen oder Ihren Notfallkontakt anzurufen.", annaRepeatLabel:"Zum Wiederholen aufs Mikrofon tippen",
+      annaVoiceGreet:"Hallo {name}!", annaVoiceWhatDo:"Sagen Sie mir, was Sie tun möchten.", annaVoiceMedName:"Bitte nennen Sie den Namen des Medikaments, das Sie einnehmen.", annaVoiceDose:"Bitte sagen Sie mir die Dosis, die Sie einnehmen.", annaVoiceFreq:"Bitte sagen Sie mir, wie oft Sie es einnehmen.", annaVoiceTime:"Bitte sagen Sie mir, wann ich Sie erinnern soll.", annaVoiceIntake:"Bitte sagen Sie mir, ob Sie es mit Wasser oder vor dem Essen einnehmen.", annaVoiceContact:"Sagen Sie mir, wen ich anrufen soll, oder tippen Sie auf Schließen, um es selbst einzugeben.", annaVoiceApp:"Sie können mich bitten, ein Medikament hinzuzufügen, den heutigen Plan anzusehen oder Ihren Notfallkontakt anzurufen.", annaRepeatLabel:"Zum Wiederholen aufs Mikrofon tippen",
       close:"Schließen", chooseContact:"Kontakt auswählen",
       wantToCall:"Möchten Sie anrufen?", willCall:"Wir rufen {name} unter {phone} an.", yesCall:"Ja, anrufen", no:"Nein",
       noEmgContactTitle:"Kein Notfallkontakt",
@@ -2135,6 +2189,7 @@ class Component extends DCLogic {
       dash:"\u2014"
     };
     const ru={
+      sayRemNew:"{p}здравствуйте! Сейчас {time}. Пора принять {med}, {dose}.", sayRemRepeat:"{p}напоминаю ещё раз. Пора принять {med}, {dose}. Время приёма: {time}.", sayRemMissed:"{p}вы ещё не приняли {med}, {dose}. Время приёма было в {time}.", sayRemSnooze:"{p}прошло пятнадцать минут. Пора принять {med}, {dose}.", sayTakeHow:"Принимайте {how}.", sayWaterHalf:"Запейте половиной стакана воды.", sayWaterOne:"Запейте стаканом воды.", sayWaterTwo:"Запейте двумя стаканами воды.",
       tagline:"Ваш ежедневный медицинский помощник",
       authTagline:"Ваш ежедневный медицинский помощник. Давайте всё настроим.",
       signUp:"Регистрация", logIn:"Вход",
@@ -2186,7 +2241,7 @@ class Component extends DCLogic {
       hintMedDone:"Лекарство добавлено.", hintMedDoneVoice:"Скажите «Ещё», чтобы добавить ещё одно лекарство, или «Готово».",
       hintProfile:"Здесь можно изменить имя, язык, размер текста и звук.", hintAppVoice:"Можно сказать: «Добавить лекарство», «Расписание на сегодня» или «Позвонить».",
       annaIntro:"Привет! Я Анна — могу добавить лекарства, ответить на вопросы или помочь в экстренной ситуации.",
-      annaIntroTitle:"Знакомьтесь, это Анна", annaMeetTitle:"Знакомьтесь с голосовым ассистентом Анной", annaMeetSubtitle:"Каждый раз, когда вы видите эту кнопку, вы можете обратиться за помощью к Анне.", annaIntroPrompt:"Я напоминаю о лекарствах, добавляю экстренные контакты и отвечаю на ваши вопросы.", annaIntroScript:"Дорогая {name}, давайте поприветствуем друг друга. Скажите мне привет. Отлично! Здравствуйте, {name}! Что бы вы хотели сделать сначала — добавить лекарство, посмотреть план на сегодня, или позвонить экстренному контакту? Вы можете нажать на кнопки сами, и вы попадёте в нужное меню, или скажите мне, что мы делаем сначала — вводим экстренный контакт или лекарства, которые вы будете принимать, — и я вас перенаправлю.", annaTapHint:"Нажмите на микрофон выше, чтобы поговорить со мной.", annaHowItWorks:"Когда увидите мою синюю кнопку, просто нажмите на неё и скажите, что вам нужно — например, добавить лекарство или позвать на помощь.", annaTryGreeting:"Послушать приветствие Анны", annaTryGreetingHint:"Нажмите, чтобы попробовать", annaTrialGreeting:"Здравствуйте, {name}! Я Анна. Я напомню вам, когда нужно принять лекарство, и всегда рядом — просто нажмите на мою кнопку.",
+      annaIntroTitle:"Знакомьтесь, это Анна", annaMeetTitle:"Знакомьтесь с голосовым ассистентом Анной", annaMeetSubtitle:"Каждый раз, когда вы видите эту кнопку, вы можете обратиться за помощью к Анне.", annaIntroPrompt:"Я напоминаю о лекарствах, добавляю экстренные контакты и отвечаю на ваши вопросы.", annaIntroScript:"Здравствуйте, {name}! Рада знакомству. С чего начнём? Можно добавить лекарство, посмотреть план на сегодня, или позвонить экстренному контакту. Нажмите на нужную кнопку. Или просто скажите мне, и я открою нужный экран.", annaTapHint:"Нажмите на микрофон выше, чтобы поговорить со мной.", annaHowItWorks:"Когда увидите мою синюю кнопку, просто нажмите на неё и скажите, что вам нужно — например, добавить лекарство или позвать на помощь.", annaTryGreeting:"Послушать приветствие Анны", annaTryGreetingHint:"Нажмите, чтобы попробовать", annaTrialGreeting:"Здравствуйте, {name}! Я Анна. Я напомню вам, когда пора принять лекарство. Я всегда рядом. Просто нажмите на мою кнопку.",
       medStep1:"Лекарство · Шаг 1 из 5", medication:"Лекарство",
       whatMed:"Какое лекарство вы принимаете?", medicationName:"Название лекарства",
       medNamePh:"Например: Аспирин",
@@ -2236,7 +2291,7 @@ class Component extends DCLogic {
       account:"Аккаунт", logOut:"Выйти",
       navPillbox:"Таблетница", navCall:"Звонок", navProfile:"Профиль",
       timeForMed:"⏰ Время принять лекарство", takeMedBtn:"Принять лекарство", snooze15:"Отложить на 15 минут", snoozeShort:"Отложить", skipDose:"Пропустить",
-      voiceReminderTitle:"Голосовое напоминание", voiceReminderHint:"Нажмите, чтобы повторить", voiceReminderLabel:"Воспроизводится голосовое напоминание. Нажмите, чтобы повторить.", voicePrompt:"Пора принять {name}. {dose}.", voicePraise:"Молодец{name}! Отлично.", voiceNextDose:"Следующий приём — {med}, {dose}, в {time}.", voicePraiseAll:"Ты молодец{name}! Все лекарства на сегодня приняты. Я тобой горжусь!", voiceOpener:"{person}, привет! Уже {time} — пора принять {med}, {dose}.", voiceRepeatOpener:"{person}, напоминаю ещё раз: {med} пока не принят. {dose}, время приёма — {time}.", voiceSnoozeOpener:"{person}, прошло уже 15 минут — пора принять {med}, {dose}, время приёма — {time}.", voiceMissedOpener:"{person}, похоже, {med} ещё не принят — {dose}, время приёма было {time}.", voiceInstr:"Не забудь: {instr}.", voiceCloser:"Я рядом, если что-то понадобится!", voiceAnd:"и", voicePreview:"Здравствуйте, я Анна. Так будет звучать голос напоминаний.",
+      voiceReminderTitle:"Голосовое напоминание", voiceReminderHint:"Нажмите, чтобы повторить", voiceReminderLabel:"Воспроизводится голосовое напоминание. Нажмите, чтобы повторить.", voicePrompt:"Пора принять {name}. {dose}.", voicePraise:"Отлично{name}! Вы молодец.", voiceNextDose:"Следующий приём — {med}, {dose}, в {time}.", voicePraiseAll:"Прекрасно{name}! Все лекарства на сегодня приняты. Я вами горжусь.", voiceOpener:"{person}, привет! Уже {time} — пора принять {med}, {dose}.", voiceRepeatOpener:"{person}, напоминаю ещё раз: {med} пока не принят. {dose}, время приёма — {time}.", voiceSnoozeOpener:"{person}, прошло уже 15 минут — пора принять {med}, {dose}, время приёма — {time}.", voiceMissedOpener:"{person}, похоже, {med} ещё не принят — {dose}, время приёма было {time}.", voiceInstr:"Не забудь: {instr}.", voiceCloser:"Я рядом, если понадобится помощь.", voiceAnd:"и", voicePreview:"Здравствуйте, я Анна. Так будет звучать голос напоминаний.",
       takenTitle:"Принято!", allDoneTitle:"На сегодня всё готово!",
       takenBody:"{name} отмечено как принятое.",
       allDoneBody:"{name} принято — все дозы выполнены. Отлично.",
@@ -2330,7 +2385,7 @@ class Component extends DCLogic {
   WATER_OPTS(){ return ['half','one','two']; }
   trIntake(k){ const t=this.tr(); return ({beforeMeals:t.intakeBeforeMeals, withMeals:t.intakeWithMeals, afterMeals:t.intakeAfterMeals})[k]||k; }
   trWater(k){ const t=this.tr(); return ({half:t.waterHalf, one:t.waterOne, two:t.waterTwo})[k]||k; }
-  instrParts(m){ const t=this.tr(); const out=[]; const arr=(m&&Array.isArray(m.intake))?m.intake:[]; this.INTAKE_OPTS().forEach(k=>{ if(arr.includes(k)) out.push({kind:'meal', text:this.trIntake(k)}); }); if(m&&m.water) out.push({kind:'water', text:this.fmt(t.waterWith,{amt:this.trWater(m.water)})}); if(m&&m.manualInstr) out.push({kind:'note', text:m.manualInstr}); if(!out.length){ const leg=this.medInstr(m); if(leg) out.push({kind:'meal', text:this.trInstr(leg)}); } return out; }
+  instrParts(m){ const t=this.tr(); const out=[]; const arr=(m&&Array.isArray(m.intake))?m.intake:[]; this.INTAKE_OPTS().forEach(k=>{ if(arr.includes(k)) out.push({kind:'meal', text:this.trIntake(k)}); }); if(m&&m.water) out.push({kind:'water', text:this.fmt(t.waterWith,{amt:this.trWater(m.water)})}); if(m&&m.manualInstr) out.push({kind:'note', text:(m.manualInstr==='Take 30 minutes before bedtime'&&this.state.language!=='en'?t.noteBed.replace(/\.$/,''):m.manualInstr)}); if(!out.length){ const leg=this.medInstr(m); if(leg) out.push({kind:'meal', text:this.trInstr(leg)}); } return out; }
   instrText(m){ return this.instrParts(m).map(x=>x.text).join(' · '); }
   // ---- Russian locale shows 24-hour clock ('14:00'), no AM/PM ----
   ru24(t,p){ const parts=String(t).split(':'); let h=parseInt(parts[0],10)||0; const m=(parts[1]||'00').padStart(2,'0'); if(p==='PM'&&h!==12)h+=12; if(p==='AM'&&h===12)h=0; return String(h).padStart(2,'0')+':'+m; }
